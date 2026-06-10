@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+/* Global styles. Layout via Tailwind utilities; components via ng-zorro.
+ *
+ * NOTE: ng-zorro styles bare tags (h1..h6, a, ...) with UNLAYERED rules, which beat
+ * Tailwind v4 utilities (those live in a lower-priority cascade layer). Plain class
+ * rules written here are unlayered too, so they override ng-zorro by specificity. */
+.app-title {
+  margin: 0;
+  line-height: 1.1;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+}

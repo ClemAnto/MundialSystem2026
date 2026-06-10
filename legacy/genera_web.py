@@ -1,0 +1,226 @@
+# -*- coding: utf-8 -*-
+"""Genera index.html (web-app statica) riusando i dati verificati di genera_scommesse.py"""
+import json
+import os
+import sys
+# script accantonato: genera_scommesse ora vive in ../src
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
+import genera_scommesse as g
+
+data = {
+    "groups": [{"g": gr, "teams": ts} for gr, ts in g.GROUPS],
+    "bets": [],
+}
+for b in sorted(g.bollette):
+    m = g.bollette[b]
+    data["bets"].append({
+        "b": b, "stake": m["stake"], "ncomb": m["ncomb"], "imp": m["imp"],
+        "vmin": m["vmin"], "vmax": m["vmax"],
+        "sel": [{"g": s[0], "p1": s[1], "p2": s[2], "q": s[3]} for s in m["sel"]],
+    })
+
+HEAD = """<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scommesse Mondiali 2026 - Live</title>
+<style>
+:root{--bg:#0f1419;--card:#1a2230;--line:#2a3547;--txt:#e6edf3;--mut:#8b97a8;
+ --gOK:#1f8f4e;--gL:#1e3a2a;--rKO:#b3382f;--rL:#3a1e1e;--accent:#3b82f6;}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+header{padding:14px 16px;background:linear-gradient(90deg,#13315c,#1a2230);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:18px} .sub{color:var(--mut);font-size:12px;margin-top:3px}
+.wrap{padding:14px;max-width:1100px;margin:0 auto}
+.tabs{display:flex;gap:6px;margin:0 0 12px} .tab{padding:8px 14px;background:var(--card);border:1px solid var(--line);
+ border-radius:8px;cursor:pointer;color:var(--mut)} .tab.on{color:#fff;border-color:var(--accent);background:#16314f}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+table{border-collapse:collapse;width:100%;font-size:13px} th,td{padding:6px 8px;border:1px solid var(--line);text-align:center}
+th{background:#16203040;color:var(--mut);font-weight:600;position:sticky}
+td.l,th.l{text-align:left}
+input.s{width:38px;background:#0d1320;border:1px solid var(--line);color:var(--txt);border-radius:5px;text-align:center;padding:4px}
+.win{background:var(--gL)} .winS{background:var(--gOK);color:#fff;font-weight:600}
+.los{background:var(--rL)} .losS{background:var(--rKO);color:#fff;font-weight:600}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600}
+.bWin{background:var(--gOK);color:#fff} .bLos{background:var(--rKO);color:#fff} .bDef{outline:2px solid #fff3}
+.must{color:#34d399;font-weight:700} .mustnot{color:#f87171;font-weight:700} .cont{color:var(--mut)}
+.btn{padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:13px;margin-right:6px}
+.btn.sec{background:#2a3547} .qok{color:#34d399} .grp{font-weight:700;color:#7dd3fc;font-size:13px;margin:4px 0}
+.hide{display:none} .note{color:var(--mut);font-size:12px;line-height:1.5}
+.flex{display:flex;flex-wrap:wrap;gap:12px} .flex>.card{flex:1;min-width:280px}
+.legend span{margin-right:14px;font-size:12px} .dot{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:middle;margin-right:4px}
+</style></head><body>
+<header><h1>&#9917; Scommesse Mondiali 2026 &mdash; valutazione live</h1>
+<div class="sub">Imposta i risultati nelle Classifiche: scommesse e bollette si colorano da sole. Condividi il link per far vedere a tutti lo stesso stato.</div></header>
+<div class="wrap">
+<div class="tabs"><div class="tab on" data-t="cls">Classifiche</div><div class="tab" data-t="bet">Scommesse</div><div class="tab" data-t="rip">Bollette</div></div>
+<div id="bar" class="card">
+ <button class="btn" id="copy">&#128279; Copia link condivisibile</button>
+ <button class="btn sec" id="ex">Carica esempio</button>
+ <button class="btn sec" id="reset">Azzera</button>
+ <span class="note" id="msg"></span>
+ <div class="legend" style="margin-top:8px">
+  <span><i class="dot" style="background:var(--gOK)"></i>vince (definitivo)</span>
+  <span><i class="dot" style="background:var(--gL)"></i>in vincita</span>
+  <span><i class="dot" style="background:var(--rL)"></i>in perdita</span>
+  <span><i class="dot" style="background:var(--rKO)"></i>perde (definitivo)</span>
+  <span class="must">&#9989; deve passare</span><span class="mustnot">&#9940; non deve passare</span>
+ </div>
+</div>
+<div id="cls"></div><div id="bet" class="hide"></div><div id="rip" class="hide"></div>
+</div>
+"""
+
+APP = r"""
+<script>
+const ST = {};                       // stato: key "G|Team" -> [V,N,P,GF,GS]
+function key(g,t){return g+"|"+t;}
+DATA.groups.forEach(gr=>gr.teams.forEach(t=>ST[key(gr.g,t)]=[0,0,0,0,0]));
+
+function loadState(){
+  try{
+    let h=location.hash.slice(1);
+    if(h){let a=JSON.parse(decodeURIComponent(escape(atob(h)))); Object.assign(ST,a); return;}
+    let l=localStorage.getItem("mw26"); if(l)Object.assign(ST,JSON.parse(l));
+  }catch(e){}
+}
+function saveLocal(){localStorage.setItem("mw26",JSON.stringify(ST));}
+function shareLink(){let s=btoa(unescape(encodeURIComponent(JSON.stringify(ST))));return location.origin+location.pathname+"#"+s;}
+
+// ---- motore di calcolo (identico al foglio Excel) ----
+function teamsOf(g){return DATA.groups.find(x=>x.g===g).teams;}
+function st(g,t){return ST[key(g,t)]||[0,0,0,0,0];}
+function pts(g,t){let[V,N]=st(g,t);return V*3+N;}
+function pg(g,t){let[V,N,P]=st(g,t);return V+N+P;}
+function dr(g,t){let[,,,gf,gs]=st(g,t);return gf-gs;}
+function gf(g,t){return st(g,t)[3];}
+function score(g,t){return pts(g,t)*10000+dr(g,t)*100+gf(g,t);}
+function pos(g,t){return 1+teamsOf(g).filter(o=>score(g,o)>score(g,t)).length;}
+function qual(g,t){return pos(g,t)<=2;}
+function closed(g){return teamsOf(g).every(t=>pg(g,t)>=3);}
+function maxp(g,t){return pts(g,t)+(3-pg(g,t))*3;}
+function elim(g,t){return teamsOf(g).filter(o=>pts(g,o)>maxp(g,t)).length>=2;}
+
+function selStatus(s){
+  let both=qual(s.g,s.p1)&&qual(s.g,s.p2);
+  let dead=elim(s.g,s.p1)||elim(s.g,s.p2);
+  let cl=closed(s.g);
+  if(both) return cl?{t:"VINTA (def.)",c:2}:{t:"In vincita",c:1};
+  return (cl||dead)?{t:"PERSA (def.)",c:-2}:{t:"In perdita",c:-1};
+}
+// icone obblighi (statiche dalle scommesse)
+const APP_CNT={}, ROW_CNT={};
+DATA.bets.forEach(B=>B.sel.forEach(s=>{
+  ROW_CNT[s.g]=(ROW_CNT[s.g]||0)+1;
+  APP_CNT[s.p1]=(APP_CNT[s.p1]||0)+1; APP_CNT[s.p2]=(APP_CNT[s.p2]||0)+1;
+}));
+function obligo(g,t){let a=APP_CNT[t]||0,tot=ROW_CNT[g]||0;
+  if(a===0)return{t:"⛔ non deve passare",c:"mustnot"};
+  if(a===tot)return{t:"✅ deve passare",c:"must"};
+  return{t:"➖ contesa",c:"cont"};}
+
+function bolStatus(B){
+  let groups=[...new Set(B.sel.map(s=>s.g))];
+  let satNow=0,satClosed=0,dead=0;
+  let payout=B.stake;
+  groups.forEach(g=>{
+    let sels=B.sel.filter(s=>s.g===g);
+    let okSel=sels.find(s=>qual(s.g,s.p1)&&qual(s.g,s.p2));
+    let sn=!!okSel; if(sn)satNow++;
+    if(sn&&closed(g))satClosed++;
+    let allDead=sels.every(s=>elim(s.g,s.p1)||elim(s.g,s.p2)) || (closed(g)&&!sn);
+    if(allDead)dead++;
+    payout*= okSel? okSel.q : 1;
+  });
+  let tot=groups.length, winNow=satNow===tot, defWin=satClosed===tot, defLoss=dead>0;
+  let txt,c;
+  if(defWin){txt="VINCENTE (def.)";c=2;} else if(defLoss){txt="PERDENTE (def.)";c=-2;}
+  else if(winNow){txt="Vincente (provv.)";c=1;} else {txt="Perdente (provv.)";c=-1;}
+  return{txt,c,satNow,tot,payout:winNow?payout:null};
+}
+
+// ---- rendering ----
+function cls(c){return c===2?"winS":c===1?"win":c===-2?"losS":"los";}
+function renderCls(){
+  let h="";
+  DATA.groups.forEach(gr=>{
+    h+=`<div class="card"><div class="grp">Girone ${gr.g}${closed(gr.g)?' &middot; <span class="qok">concluso</span>':''}</div>`;
+    h+=`<table><tr><th class="l">Squadra</th><th>V</th><th>N</th><th>P</th><th>GF</th><th>GS</th><th>Pti</th><th>Pos</th><th>Esito</th><th>Obbligo</th></tr>`;
+    teamsOf(gr.g).map(t=>({t,p:pos(gr.g,t)})).sort((a,b)=>a.p-b.p).forEach(({t})=>{
+      let v=st(gr.g,t), ob=obligo(gr.g,t), q=qual(gr.g,t), el=elim(gr.g,t);
+      let esito=closed(gr.g)?(q?'<span class="qok">Qualificata</span>':'Eliminata'):(el?'Fuori':(q?'<span class="qok">In zona</span>':'In corsa'));
+      let rc=q?'win':(el?'los':'');
+      h+=`<tr class="${rc}"><td class="l">${t}</td>`;
+      [0,1,2,3,4].forEach(i=>{h+=`<td><input class="s" data-g="${gr.g}" data-t="${t}" data-i="${i}" value="${v[i]}"></td>`;});
+      h+=`<td><b>${pts(gr.g,t)}</b></td><td>${pos(gr.g,t)}</td><td>${esito}</td><td class="${ob.c}">${ob.t}</td></tr>`;
+    });
+    h+=`</table></div>`;
+  });
+  document.getElementById("cls").innerHTML=h;
+  document.querySelectorAll("input.s").forEach(inp=>inp.addEventListener("change",e=>{
+    let g=e.target.dataset.g,t=e.target.dataset.t,i=+e.target.dataset.i;
+    ST[key(g,t)][i]=Math.max(0,parseInt(e.target.value)||0); saveLocal(); renderAll();
+  }));
+}
+function renderBet(){
+  let h="";
+  DATA.bets.forEach(B=>{
+    let bs=bolStatus(B);
+    h+=`<div class="card"><div class="grp">Bolletta ${B.b} &middot; ${B.stake.toFixed(2)}&euro;/comb &middot; ${B.ncomb} comb &middot; importo ${B.imp.toFixed(2)}&euro; `;
+    h+=`<span class="badge ${bs.c>0?'bWin':'bLos'} ${Math.abs(bs.c)===2?'bDef':''}">${bs.txt}</span></div>`;
+    h+=`<table><tr><th>#</th><th>Gir</th><th class="l">Coppia</th><th>Quota</th><th>P1</th><th>P2</th><th>Stato</th></tr>`;
+    B.sel.forEach((s,i)=>{
+      let ss=selStatus(s);
+      h+=`<tr class="${cls(ss.c)}"><td>${i+1}</td><td>${s.g}</td><td class="l">${s.p1} / ${s.p2}</td>`;
+      h+=`<td>${s.q.toFixed(2)}</td><td>${pos(s.g,s.p1)}</td><td>${pos(s.g,s.p2)}</td><td>${ss.t}</td></tr>`;
+    });
+    h+=`</table></div>`;
+  });
+  document.getElementById("bet").innerHTML=h;
+}
+function renderRip(){
+  let h=`<div class="card"><table><tr><th class="l">Bolletta</th><th>Importo</th><th>Vinc. max</th><th>Gironi OK</th><th>Stato</th><th>Definitivo</th><th>Vincita attuale</th></tr>`;
+  DATA.bets.forEach(B=>{
+    let bs=bolStatus(B);
+    h+=`<tr class="${cls(bs.c)}"><td class="l">Bolletta ${B.b}</td><td>${B.imp.toFixed(2)}&euro;</td><td>${B.vmax.toFixed(2)}&euro;</td>`;
+    h+=`<td>${bs.satNow}/${bs.tot}</td><td>${bs.txt}</td><td>${Math.abs(bs.c)===2?'SÌ':'no'}</td>`;
+    h+=`<td>${bs.payout!=null?bs.payout.toFixed(2)+' &euro;':'—'}</td></tr>`;
+  });
+  h+=`</table><div class="note" style="margin-top:8px">Una bolletta vince solo se <b>tutti e 10 i gironi</b> hanno la coppia corretta. "Vincita attuale" = incasso se i risultati di adesso fossero definitivi. Nota: quota Belgio/Nuova Zelanda della Bolletta 1 stimata (illeggibile sullo scontrino).</div></div>`;
+  document.getElementById("rip").innerHTML=h;
+}
+function renderAll(){renderCls();renderBet();renderRip();}
+
+document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on")); tab.classList.add("on");
+  ["cls","bet","rip"].forEach(id=>document.getElementById(id).classList.add("hide"));
+  document.getElementById(tab.dataset.t).classList.remove("hide");
+}));
+document.getElementById("copy").addEventListener("click",()=>{
+  let url=shareLink(); navigator.clipboard.writeText(url).then(()=>{
+    document.getElementById("msg").textContent="Link copiato! Incollalo dove vuoi: chi lo apre vede questi risultati.";
+  });
+  location.hash=url.split("#")[1]||"";
+});
+document.getElementById("reset").addEventListener("click",()=>{
+  DATA.groups.forEach(gr=>gr.teams.forEach(t=>ST[key(gr.g,t)]=[0,0,0,0,0]));
+  location.hash=""; saveLocal(); renderAll(); document.getElementById("msg").textContent="Azzerato.";
+});
+document.getElementById("ex").addEventListener("click",()=>{
+  // esempio: girone C e G con qualche risultato
+  ST[key("C","Brasile")]=[3,0,0,7,1]; ST[key("C","Scozia")]=[2,0,1,4,3];
+  ST[key("C","Marocco")]=[1,0,2,2,5]; ST[key("C","C - da definire")]=[0,0,3,1,5];
+  ST[key("G","Belgio")]=[2,0,0,5,1]; ST[key("G","Egitto")]=[1,0,1,2,2];
+  ST[key("G","Iran")]=[1,0,1,2,3]; ST[key("G","Nuova Zelanda")]=[0,0,2,0,3];
+  saveLocal(); renderAll(); document.getElementById("msg").textContent="Esempio caricato (gironi C e G).";
+});
+
+loadState(); renderAll();
+</script></body></html>
+"""
+
+html = HEAD + "<script>const DATA=" + json.dumps(data, ensure_ascii=False) + ";</script>" + APP
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html"), "w", encoding="utf-8") as f:
+    f.write(html)
+print("index.html generato (%d byte)" % len(html))

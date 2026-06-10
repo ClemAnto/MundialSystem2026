@@ -1,0 +1,27 @@
+@if (byGroup().length) {
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    @for (g of byGroup(); track g.letter) {
+      <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">GIRONE {{ g.letter }}</div>
+        <ul class="divide-y divide-slate-100 text-sm">
+          @for (m of g.matches; track $index) {
+            <li class="flex items-center gap-2 px-3 py-2">
+              <span class="flex-1 text-right">{{ m.home }}</span>
+              @if (played(m)) {
+                <span class="rounded bg-slate-100 px-2 py-0.5 font-bold tabular-nums">{{ m.hs }} - {{ m.as }}</span>
+              } @else {
+                <span class="px-2 text-xs text-slate-400">vs</span>
+              }
+              <span class="flex-1">{{ m.away }}</span>
+              @if (m.status === 'IN_PLAY' || m.status === 'PAUSED') {
+                <span class="rounded bg-red-100 px-1.5 text-xs font-semibold text-red-700">LIVE</span>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="text-slate-500">Nessuna partita disponibile.</p>
+}

@@ -1,0 +1,33 @@
+@if (loader.model(); as m) {
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    @for (g of m.gironi; track g.letter) {
+      <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">GIRONE {{ g.letter }}</div>
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-slate-500">
+              <th class="px-2 py-1 text-center font-semibold">Pos</th>
+              <th class="px-2 py-1 text-left font-semibold">Squadra</th>
+              <th class="px-2 py-1 text-right font-semibold">Pti</th>
+              <th class="px-2 py-1 text-center font-semibold">Rim</th>
+              <th class="px-2 py-1 text-center font-semibold"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of g.rows; track row.team) {
+              <tr [style.background]="rowBg(row.obbligo, row.pos)">
+                <td class="px-2 py-1 text-center font-semibold text-slate-600">{{ row.pos }}</td>
+                <td class="px-2 py-1">{{ row.team }}</td>
+                <td class="px-2 py-1 text-right tabular-nums font-semibold">{{ row.pts }}</td>
+                <td class="px-2 py-1 text-center tabular-nums text-slate-500">{{ row.rim }}</td>
+                <td class="px-2 py-1 text-center">{{ row.icon }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="text-slate-500">Caricamento dati…</p>
+}

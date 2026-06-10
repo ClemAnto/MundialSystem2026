@@ -1,0 +1,12 @@
+# Node / Angular
+client/node_modules/
+client/dist/
+client/.angular/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db

@@ -1,0 +1,45 @@
+@if (loader.model(); as m) {
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9">
+    @for (b of m.bollette; track b.n) {
+      <div class="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">
+          BOLLETTA {{ b.n }} <span class="font-normal opacity-80">({{ euro(b.imp) }})</span>
+        </div>
+
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-slate-500">
+              <th class="px-2 py-1 text-left font-semibold">Gir</th>
+              <th class="px-2 py-1 text-left font-semibold">Coppia</th>
+              <th class="px-2 py-1 text-right font-semibold">Q</th>
+              <th class="px-2 py-1 text-center font-semibold">✔</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (g of b.groups; track g.grp) {
+              @for (s of g.sels; track $index) {
+                <tr [style.background]="groupBg(g.code)"
+                    [class.border-t-2]="$first"
+                    [class.border-slate-300]="$first">
+                  <td class="px-2 py-1 font-semibold text-slate-600">{{ $first ? g.grp : '' }}</td>
+                  <td class="px-2 py-1 whitespace-nowrap" [title]="s.t1 + ' / ' + s.t2">
+                    {{ abbr(s.t1) }} / {{ abbr(s.t2) }}
+                  </td>
+                  <td class="px-2 py-1 text-right tabular-nums">{{ s.q.toFixed(2) }}</td>
+                  <td class="px-2 py-1 text-center font-bold text-green-700">{{ s.bothQual ? '✔' : '' }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+
+        <div class="mt-auto px-3 py-2 text-center text-sm font-bold text-[#1f4e78]"
+             [style.background]="footBg(b.code)" [title]="b.stato">
+          {{ b.code > 0 ? '✔' : '✖' }} Attuale {{ euro(b.vincita) }}
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="text-slate-500">Caricamento dati…</p>
+}

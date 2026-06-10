@@ -1,0 +1,176 @@
+import { Injectable } from '@angular/core';
+import { GROUPS, BOLLETTE } from './bets-data';
+import {
+  BollettaState,
+  Computed,
+  GironeRow,
+  GironeView,
+  GroupState,
+  LiveData,
+  SelState,
+  Standings,
+  TeamState,
+} from './model';
+
+/**
+ * Replays the verified betting logic of the Excel sheet, client-side.
+ * Market: "Accoppiata Passaggio Turno - Non in Ordine" = the two teams that finish
+ * in the top 2 of a group (order irrelevant).
+ */
+@Injectable({ providedIn: 'root' })
+export class BetEngine {
+  // ---- static indexes (built once from the bet data) ----
+  private readonly teamGroup: Record<string, string> = {};
+  private readonly teamGlobalIdx: Record<string, number> = {};
+  private readonly groupTeams: Record<string, string[]> = {};
+  private readonly totalTeams: number;
+  /** how many times a team appears across all bet selections */
+  private readonly teamApp: Record<string, number> = {};
+  /** total selection rows per group across all bet slips */
+  private readonly groupTot: Record<string, number> = {};
+
+  constructor() {
+    let gi = 0;
+    for (const g of GROUPS) {
+      this.groupTeams[g.letter] = g.teams;
+      for (const t of g.teams) {
+        this.teamGroup[t] = g.letter;
+        this.teamGlobalIdx[t] = gi++;
+      }
+    }
+    this.totalTeams = gi;
+    for (const b of BOLLETTE) {
+      for (const s of b.sel) {
+        this.groupTot[s.grp] = (this.groupTot[s.grp] ?? 0) + 1;
+        this.teamApp[s.t1] = (this.teamApp[s.t1] ?? 0) + 1;
+        this.teamApp[s.t2] = (this.teamApp[s.t2] ?? 0) + 1;
+      }
+    }
+  }
+
+  /** Global obligation (aggregated over all slips): 1 must pass, -1 must not, 0 neutral. */
+  private obbligoCode(team: string): number {
+    const tot = this.groupTot[this.teamGroup[team]] ?? 0;
+    const app = this.teamApp[team] ?? 0;
+    if (tot === 0) return 0;
+    if (app === 0) return -1;
+    if (app >= tot) return 1;
+    return 0;
+  }
+
+  private obbligoIcon(team: string): string {
+    const tot = this.groupTot[this.teamGroup[team]] ?? 0;
+    const app = this.teamApp[team] ?? 0;
+    if (tot === 0) return '';
+    if (app === 0) return '⛔';
+    if (app >= tot) return '✅';
+    return '·';
+  }
+
+  // ---- dynamic computation ----
+  private computeTeams(standings: Standings): { teams: Record<string, TeamState>; closed: Record<string, boolean> } {
+    const teams: Record<string, TeamState> = {};
+    const score: Record<string, number> = {};
+    for (const team of Object.keys(this.teamGroup)) {
+      const s = standings[team] ?? { w: 0, d: 0, l: 0, gf: 0, ga: 0 };
+      const w = s.w || 0, d = s.d || 0, l = s.l || 0, gf = s.gf || 0, ga = s.ga || 0;
+      const pg = w + d + l, pts = w * 3 + d, dr = gf - ga;
+      const maxPts = pts + (3 - pg) * 3;
+      // deterministic score: pts -> dr -> gf -> table order (earlier team wins ties)
+      score[team] = pts * 1e9 + (dr + 1000) * 1e5 + gf * 100 + (this.totalTeams - this.teamGlobalIdx[team]);
+      teams[team] = {
+        team, group: this.teamGroup[team], w, d, l, gf, ga,
+        pg, pts, dr, maxPts, pos: 0, qual: false, elim: false,
+      };
+    }
+    // position: official if > 0, else rank by score within the group (always distinct 1-4)
+    for (const team of Object.keys(teams)) {
+      const me = teams[team];
+      const posUff = standings[team]?.pos ?? 0;
+      let rank = 1, elimCount = 0;
+      for (const other of this.groupTeams[me.group]) {
+        if (other === team) continue;
+        if (score[other] > score[team]) rank++;
+        if (teams[other].pts > me.maxPts) elimCount++;
+      }
+      me.pos = posUff > 0 ? posUff : rank;
+      me.qual = me.pos <= 2;
+      me.elim = elimCount >= 2;
+    }
+    // group "closed" = all 4 teams have played 3 matches
+    const closed: Record<string, boolean> = {};
+    for (const letter of Object.keys(this.groupTeams)) {
+      closed[letter] = this.groupTeams[letter].every((t) => teams[t].pg === 3);
+    }
+    return { teams, closed };
+  }
+
+  private computeBolletta(
+    b: typeof BOLLETTE[number],
+    teams: Record<string, TeamState>,
+    closed: Record<string, boolean>,
+  ): BollettaState {
+    const order: string[] = [];
+    const byGroup: Record<string, SelState[]> = {};
+    for (const s of b.sel) {
+      if (!byGroup[s.grp]) { byGroup[s.grp] = []; order.push(s.grp); }
+      const bothQual = teams[s.t1].qual && teams[s.t2].qual;
+      const dead = teams[s.t1].elim || teams[s.t2].elim || (closed[s.grp] && !bothQual);
+      byGroup[s.grp].push({ grp: s.grp, t1: s.t1, t2: s.t2, q: s.q, bothQual, dead });
+    }
+
+    const groups: GroupState[] = order.map((grp) => {
+      const sels = byGroup[grp];
+      const nSel = sels.length;
+      const satNow = sels.some((x) => x.bothQual);
+      const deadCount = sels.filter((x) => x.dead).length;
+      const isClosed = closed[grp];
+      const satClosed = satNow && isClosed;
+      const unsat = nSel > 0 && deadCount === nSel;
+      const code = satClosed ? 2 : unsat ? -2 : satNow ? 1 : -1;
+      return { grp, sels, code, satNow, satClosed, unsat };
+    });
+
+    const tot = groups.length;
+    const satNowCount = groups.filter((g) => g.satNow).length;
+    const satClosedCount = groups.filter((g) => g.satClosed).length;
+    const unsatCount = groups.filter((g) => g.unsat).length;
+    const code = satClosedCount === tot ? 2 : unsatCount > 0 ? -2 : satNowCount === tot ? 1 : -1;
+    const stato =
+      code === 2 ? 'VINCENTE (def.)' :
+      code === -2 ? 'PERDENTE (def.)' :
+      code === 1 ? 'Vincente (provv.)' : 'Perdente (provv.)';
+    const definitivo = code === 2 || code === -2;
+    // current payout = stake x product of the quotes of the currently-winning selections
+    let prod = 1;
+    for (const s of b.sel) if (teams[s.t1].qual && teams[s.t2].qual) prod *= s.q;
+    const vincita = b.stake * prod;
+
+    return { n: b.n, imp: b.imp, stake: b.stake, groups, tot, satNowCount, code, stato, definitivo, vincita };
+  }
+
+  private computeGironi(teams: Record<string, TeamState>): GironeView[] {
+    return GROUPS.map((g) => {
+      const rows: GironeRow[] = g.teams
+        .map((t) => teams[t])
+        .slice()
+        .sort((a, b) => a.pos - b.pos)
+        .map((t) => ({
+          team: t.team,
+          pos: t.pos,
+          pts: t.pts,
+          rim: Math.max(0, 3 - t.pg),
+          obbligo: this.obbligoCode(t.team),
+          icon: this.obbligoIcon(t.team),
+        }));
+      return { letter: g.letter, rows };
+    });
+  }
+
+  computeAll(data: LiveData): Computed {
+    const { teams, closed } = this.computeTeams(data.standings ?? {});
+    const bollette = BOLLETTE.map((b) => this.computeBolletta(b, teams, closed));
+    const gironi = this.computeGironi(teams);
+    return { teams, closed, bollette, gironi };
+  }
+}

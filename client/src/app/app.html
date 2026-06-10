@@ -1,0 +1,35 @@
+<div class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+  <header class="bg-[#1f4e78] text-white shadow">
+    <div class="flex w-full items-center gap-3 px-4 py-3">
+      <span nz-icon nzType="trophy" class="flex text-2xl leading-none"></span>
+      <h1 class="app-title">Bolletta Mondiale 2026</h1>
+      @if (loader.sim()) {
+        <span class="rounded bg-amber-400 px-2 py-0.5 text-xs font-bold leading-none text-amber-900">SIMULAZIONE</span>
+      }
+      <span class="ml-auto text-right text-xs opacity-80">
+        <span [class.text-red-300]="loader.errored()">{{ loader.status() }}</span>
+        @if (loader.updated(); as u) {
+          <br />Aggiornato: {{ u | date: 'dd/MM HH:mm' }}
+        }
+      </span>
+    </div>
+  </header>
+
+  <nav class="bg-white border-b border-slate-200">
+    <ul nz-menu nzMode="horizontal" class="w-full px-2">
+      <li nz-menu-item nzMatchRouter>
+        <a routerLink="/tabellone">Tabellone</a>
+      </li>
+      <li nz-menu-item nzMatchRouter>
+        <a routerLink="/gironi">Gironi</a>
+      </li>
+      <li nz-menu-item nzMatchRouter>
+        <a routerLink="/risultati">Risultati</a>
+      </li>
+    </ul>
+  </nav>
+
+  <main class="w-full flex-1 px-4 py-6">
+    <router-outlet />
+  </main>
+</div>
