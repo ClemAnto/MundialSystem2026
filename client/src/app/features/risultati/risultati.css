@@ -43,3 +43,14 @@
 .standings-toggle {
   margin-left: auto;
 }
+
+/* The floating restore button overlays the away-team name: give it a solid
+   backdrop (same amber as the custom row) so the glyphs don't blend. */
+li .reset-btn {
+  background-color: #fffbeb; /* amber-50 = custom row bg */
+  box-shadow: 0 0 0 3px #fffbeb;
+}
+li .reset-btn:hover {
+  background-color: #fde68a; /* amber-200 */
+  color: #92400e;
+}

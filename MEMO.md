@@ -287,6 +287,9 @@ e applicata dal motore `BetEngine.computeAll(...)` (override ✔, ordini-gruppo 
   (classe globale `.reset-btn`, rivelata da `.group:hover`): selezione forzata (cella ✔ delle
   bollette), classifica trascinata (header card gruppo, variante `.on-dark`), risultato custom
   (riga incontro). Service: `clearSel` / `clearGroupOrder` / `clearMatchScore`.
+  ⚠️ Il ↺ è in **position:absolute** ancorato DENTRO l'elemento `.group` (mai fuori dai suoi
+  bordi, o l'hover si perde prima di raggiungerlo) così non sposta mai il layout; ciò che copre
+  (✔, badge WHAT-IF) sfuma con `group-hover:opacity-0`, mai con `display:none` (shift).
 - Tasto What-if attivo: **bordo dorato animato** = wrapper `.whatif-wrap` leggermente più largo del
   bottone con `conic-gradient` rotante (`@property --whatif-angle`). ⚠️ Lo stesso effetto con
   `::before` a `z-index:-1` NON funziona: con stacking context sul bottone il pseudo copre il

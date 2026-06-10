@@ -1,9 +1,11 @@
 @if (loader.model(); as m) {
-  @if (whatIf.editMode()) {
-    <div class="expand-panel mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
-      Trascina le squadre per riordinare la classifica
+  <div class="expand-wrap" [class.expand-open]="whatIf.editMode()">
+    <div class="overflow-hidden">
+      <div class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
+        Trascina le squadre per riordinare la classifica
+      </div>
     </div>
-  }
+  </div>
   <div class="flex flex-col gap-4 lg:flex-row">
     <div class="grid flex-1 content-start items-start grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       @for (g of m.gironi; track g.letter) {
@@ -11,11 +13,13 @@
              [class.ring-2]="g.custom || sintesi().hoveredGroup() === g.letter"
              [class.ring-amber-400]="g.custom && sintesi().hoveredGroup() !== g.letter"
              [class.ring-sky-500]="sintesi().hoveredGroup() === g.letter">
-          <div class="flex items-center gap-1.5 bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">
+          <div class="relative flex items-center bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">
             GRUPPO {{ g.letter }}
             @if (g.custom) {
-              <span class="ml-auto rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-900">WHAT-IF</span>
-              <button type="button" class="reset-btn on-dark" title="Ripristina la classifica reale"
+              <!-- on card hover the badge fades and the restore button takes its corner (no layout shift) -->
+              <span class="ml-auto rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-900 transition-opacity duration-150 group-hover:opacity-0">WHAT-IF</span>
+              <button type="button" class="reset-btn on-dark absolute right-2.5 top-1/2 -translate-y-1/2"
+                      title="Ripristina la classifica reale"
                       (click)="whatIf.clearGroupOrder(g.letter)">↺</button>
             }
           </div>
@@ -52,5 +56,7 @@
     </aside>
   </div>
 } @else {
-  <p class="text-slate-500">Caricamento dati…</p>
+  <div class="flex justify-center py-16" aria-label="Caricamento dati">
+    <span class="ball-loader"><span class="ball">⚽</span></span>
+  </div>
 }

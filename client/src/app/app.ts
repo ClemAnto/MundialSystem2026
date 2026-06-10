@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { DataLoader } from './core/data-loader';
 import { WhatIf } from './core/what-if';
 import { abbr } from './core/team-abbr';
@@ -17,7 +18,7 @@ function pad(x: number): string {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, NzMenuModule, NzIconModule, DatePipe],
+  imports: [RouterOutlet, RouterLink, NzMenuModule, NzIconModule, NzPopconfirmModule, DatePipe],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

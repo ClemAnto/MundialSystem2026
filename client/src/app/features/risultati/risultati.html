@@ -1,9 +1,16 @@
-@if (byGroup().length) {
-  @if (whatIf.editMode()) {
-    <div class="expand-panel mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
-      Usa − e + per impostare il risultato degli incontri
+@if (!loader.data()) {
+  <!-- first load still in flight -->
+  <div class="flex justify-center py-16" aria-label="Caricamento dati">
+    <span class="ball-loader"><span class="ball">⚽</span></span>
+  </div>
+} @else if (byGroup().length) {
+  <div class="expand-wrap" [class.expand-open]="whatIf.editMode()">
+    <div class="overflow-hidden">
+      <div class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
+        Usa − e + per impostare il risultato degli incontri
+      </div>
     </div>
-  }
+  </div>
   <div class="flex flex-col gap-4 lg:flex-row">
     <div class="grid flex-1 content-start items-start grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       @for (g of byGroup(); track g.letter) {
@@ -42,7 +49,7 @@
 
           <ul class="divide-y divide-slate-100 text-sm">
             @for (m of g.matches; track $index) {
-              <li class="group flex items-center gap-2 px-3 py-2 transition-colors duration-200"
+              <li class="group relative flex items-center gap-2 px-3 py-2 transition-colors duration-200"
                   [class.bg-amber-50]="isCustom(m)">
                 <span class="flex-1 truncate text-right" [title]="m.home">{{ m.home }}</span>
                 @if (whatIf.editMode()) {
@@ -68,7 +75,8 @@
                 }
                 <span class="flex-1 truncate" [title]="m.away">{{ m.away }}</span>
                 @if (isCustom(m)) {
-                  <button type="button" class="reset-btn" title="Ripristina il risultato reale"
+                  <button type="button" class="reset-btn absolute right-1.5 top-1/2 -translate-y-1/2"
+                          title="Ripristina il risultato reale"
                           (click)="resetScore(m)">↺</button>
                 }
                 @if (m.status === 'IN_PLAY' || m.status === 'PAUSED') {

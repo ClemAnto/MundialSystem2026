@@ -54,6 +54,12 @@
 - **Animazioni espandi/collassa** riusabili: classi `.expand-wrap`/`.expand-open`/`.expand-panel` in
   `styles.css` (trick `grid-template-rows: 0fr → 1fr` per animare verso `height:auto`).
 
+## Regola deploy (ferrea)
+
+- **MAI pushare/deployare senza richiesta esplicita dell'utente.** Il push su `main` avvia da solo
+  il deploy su Pages (GitHub Actions) → anche il semplice `git push` conta come deploy.
+  Commit locali liberi; push solo quando l'utente lo chiede.
+
 ## Prima di consegnare una modifica
 
 1. `npm run build` deve passare (in `client/`).

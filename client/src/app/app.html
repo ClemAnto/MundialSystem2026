@@ -1,7 +1,7 @@
 <div class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
   <header class="bg-[#1f4e78] text-white shadow">
     <div class="flex w-full items-center gap-3 px-4 py-3">
-      <span nz-icon nzType="trophy" class="flex text-2xl leading-none"></span>
+      <img src="logo-40.png" alt="Logo MundialSystem2026" width="40" height="40" class="h-10 w-10 rounded-lg" />
       <h1 class="app-title">MundialSystem2026</h1>
       @if (loader.sim()) {
         <span class="rounded bg-amber-400 px-2 py-0.5 text-xs font-bold leading-none text-amber-900">SIMULAZIONE</span>
@@ -36,7 +36,11 @@
       @if (whatIf.editMode() && whatIf.hasChanges()) {
         <button type="button"
                 class="whatif-btn flex cursor-pointer items-center rounded bg-white/15 px-1.5 py-1 text-xs leading-none transition-colors hover:bg-white/25"
-                (click)="whatIf.resetChanges()"
+                nz-popconfirm
+                nzPopconfirmTitle="Azzerare tutte le modifiche what-if?"
+                nzOkText="Sì, azzera"
+                nzCancelText="Annulla"
+                (nzOnConfirm)="whatIf.resetChanges()"
                 title="Azzera le modifiche what-if">
           <span nz-icon nzType="reload" class="flex leading-none"></span>
         </button>

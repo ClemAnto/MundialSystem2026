@@ -32,11 +32,13 @@
                     {{ abbr(s.t1) }} / {{ abbr(s.t2) }}
                   </td>
                   <td class="px-2 py-1 text-right tabular-nums">{{ s.q.toFixed(2) }}</td>
-                  <td class="px-2 py-1 text-center font-bold text-green-700">
+                  <td class="relative px-2 py-1 text-center font-bold text-green-700">
                     @if (whatIf.editMode() && isOverridden(b.n, s)) {
-                      <!-- customized outcome: on row hover the check gives way to the restore button -->
-                      <span class="group-hover:hidden">{{ s.bothQual ? '✔' : '' }}</span>
-                      <button type="button" class="reset-btn" title="Ripristina l'esito reale"
+                      <!-- customized outcome: on row hover the check fades and the restore button overlays it -->
+                      <span class="transition-opacity duration-150 group-hover:opacity-0">{{ s.bothQual ? '✔' : '' }}</span>
+                      <button type="button"
+                              class="reset-btn absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                              title="Ripristina l'esito reale"
                               (click)="resetSel($event, b.n, s)">↺</button>
                     } @else if (whatIf.editMode()) {
                       <!-- hover preview of the toggle: faint check appears (or the real one fades) -->
@@ -54,11 +56,13 @@
 
         <div class="mt-auto px-3 py-2 text-center text-sm font-bold text-[#1f4e78]"
              [style.background]="footBg(b.code)" [title]="b.stato">
-          {{ b.code > 0 ? '✔' : '✖' }} Vincita Pot. {{ euro(b.vincita) }}
+          {{ b.code > 0 ? '✔' : '🙁' }} Vincita Pot. {{ euro(b.vincita) }}
         </div>
       </div>
     }
   </div>
 } @else {
-  <p class="text-slate-500">Caricamento dati…</p>
+  <div class="flex justify-center py-16" aria-label="Caricamento dati">
+    <span class="ball-loader"><span class="ball">⚽</span></span>
+  </div>
 }

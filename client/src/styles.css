@@ -14,6 +14,38 @@
   color: #fff;
 }
 
+/* Loading indicator: a bouncing football with a bubble squash on impact.
+   Two nested elements: the wrapper bounces (translate), the inner squashes
+   (scale, bottom-anchored) — same duration/alternate so they stay in sync. */
+.ball-loader {
+  display: inline-block;
+  animation: ball-bounce 0.55s cubic-bezier(0.35, 0, 0.8, 0.6) infinite alternate;
+}
+.ball-loader .ball {
+  display: inline-block;
+  font-size: 2.5rem;
+  line-height: 1;
+  transform-origin: 50% 100%;
+  animation: ball-squash 0.55s cubic-bezier(0.35, 0, 0.8, 0.6) infinite alternate;
+}
+@keyframes ball-bounce {
+  from {
+    transform: translateY(-1.75rem);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes ball-squash {
+  from,
+  78% {
+    transform: scale(1, 1);
+  }
+  to {
+    transform: scale(1.2, 0.78);
+  }
+}
+
 /* ---- shared expand/collapse helpers (used across feature pages) ---- */
 
 /* Soft appear for conditional panels (info banners, etc.). */
@@ -40,8 +72,8 @@
    work here: it would paint behind the header background.) */
 .whatif-wrap {
   display: inline-flex;
-  padding: 2.5px;
-  border-radius: 0.45rem;
+  padding: 1.5px;
+  border-radius: 0.4rem;
 }
 .whatif-glow {
   background: conic-gradient(
