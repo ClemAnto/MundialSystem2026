@@ -23,14 +23,16 @@
           · {{ nm.match.utc | date: 'dd/MM HH:mm' }}
         </span>
       }
-      <button type="button"
-              class="whatif-btn flex cursor-pointer items-center gap-1 rounded px-2.5 py-1 text-xs font-bold leading-none transition-colors"
-              [class.whatif-on]="whatIf.editMode()"
-              [class]="whatIf.editMode() ? 'bg-amber-400' : 'bg-white/15 hover:bg-white/25'"
-              (click)="whatIf.toggleEditMode()"
-              title="Modalità what-if: clicca sulle righe delle bollette per simulare gli esiti">
-        <span nz-icon nzType="edit" class="flex leading-none"></span> What-if
-      </button>
+      <span class="whatif-wrap" [class.whatif-glow]="whatIf.editMode()">
+        <button type="button"
+                class="whatif-btn flex cursor-pointer items-center gap-1 rounded px-2.5 py-1 text-xs font-bold leading-none transition-colors"
+                [class.whatif-on]="whatIf.editMode()"
+                [class]="whatIf.editMode() ? 'bg-amber-400' : 'bg-white/15 hover:bg-white/25'"
+                (click)="whatIf.toggleEditMode()"
+                title="Modalità what-if: clicca sulle righe delle bollette per simulare gli esiti">
+          <span nz-icon nzType="edit" class="flex leading-none"></span> What-if
+        </button>
+      </span>
       @if (whatIf.editMode() && whatIf.hasChanges()) {
         <button type="button"
                 class="whatif-btn flex cursor-pointer items-center rounded bg-white/15 px-1.5 py-1 text-xs leading-none transition-colors hover:bg-white/25"

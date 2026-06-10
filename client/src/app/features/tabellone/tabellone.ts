@@ -26,6 +26,16 @@ export class Tabellone {
     this.whatIf.toggleSel(selKey(n, s.grp, s.t1, s.t2), s.bothQual);
   }
 
+  protected isOverridden(n: number, s: SelState): boolean {
+    return selKey(n, s.grp, s.t1, s.t2) in this.whatIf.activeOverrides();
+  }
+
+  /** Restore the real outcome of one selection (without toggling it). */
+  protected resetSel(event: MouseEvent, n: number, s: SelState): void {
+    event.stopPropagation();
+    this.whatIf.clearSel(selKey(n, s.grp, s.t1, s.t2));
+  }
+
   protected readonly euro = euro;
 
   /** Per-group background by outcome code; odd groups get a darker shade. */

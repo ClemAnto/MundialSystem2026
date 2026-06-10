@@ -27,6 +27,75 @@
   }
 }
 
+/* Golden shimmer rotating around the active What-if button: a slightly larger
+   layer (::before, negative inset) filled with a spinning conic gradient that
+   peeks out as an animated border. --angle needs @property to be animatable. */
+@property --whatif-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+/* Wrapper slightly larger than the button; transparent when idle so toggling
+   the glow never shifts the layout. (A ::before with negative z-index does NOT
+   work here: it would paint behind the header background.) */
+.whatif-wrap {
+  display: inline-flex;
+  padding: 2.5px;
+  border-radius: 0.45rem;
+}
+.whatif-glow {
+  background: conic-gradient(
+    from var(--whatif-angle),
+    #92400e,
+    #fbbf24 25%,
+    #fffbeb 50%,
+    #fbbf24 75%,
+    #92400e
+  );
+  animation: whatif-glow-spin 2.5s linear infinite;
+}
+@keyframes whatif-glow-spin {
+  to {
+    --whatif-angle: 360deg;
+  }
+}
+
+/* Restore (↺) button for a single what-if customization: invisible until the
+   nearest .group ancestor is hovered. Plain CSS so it wins over ng-zorro's
+   unlayered bare-<button> rules. */
+.reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 9999px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 150ms,
+    background-color 150ms,
+    color 150ms;
+}
+.group:hover .reset-btn {
+  opacity: 1;
+}
+.reset-btn:hover {
+  background-color: rgb(100 116 139 / 0.15);
+  color: #334155;
+}
+/* variant for dark headers */
+.reset-btn.on-dark {
+  color: rgb(255 255 255 / 0.85);
+}
+.reset-btn.on-dark:hover {
+  background-color: rgb(255 255 255 / 0.2);
+  color: #fff;
+}
+
 /* Collapsible block: grid-template-rows 0fr -> 1fr animates height to "auto" both ways.
    Usage: <div class="expand-wrap [expand-open]"><div class="overflow-hidden">...</div></div> */
 .expand-wrap {

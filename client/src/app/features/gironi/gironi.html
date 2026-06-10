@@ -7,14 +7,16 @@
   <div class="flex flex-col gap-4 lg:flex-row">
     <div class="grid flex-1 content-start items-start grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       @for (g of m.gironi; track g.letter) {
-        <div class="h-fit overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow duration-200"
+        <div class="group h-fit overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow duration-200"
              [class.ring-2]="g.custom || sintesi().hoveredGroup() === g.letter"
              [class.ring-amber-400]="g.custom && sintesi().hoveredGroup() !== g.letter"
              [class.ring-sky-500]="sintesi().hoveredGroup() === g.letter">
-          <div class="flex items-center bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">
+          <div class="flex items-center gap-1.5 bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">
             GRUPPO {{ g.letter }}
             @if (g.custom) {
               <span class="ml-auto rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-900">WHAT-IF</span>
+              <button type="button" class="reset-btn on-dark" title="Ripristina la classifica reale"
+                      (click)="whatIf.clearGroupOrder(g.letter)">↺</button>
             }
           </div>
 

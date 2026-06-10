@@ -81,4 +81,8 @@ export class Risultati {
     const as = this.goals(m, 'as') + (side === 'as' ? delta : 0);
     this.whatIf.setMatchScore(matchKey(m), hs, as);
   }
+
+  protected resetScore(m: MatchInfo): void {
+    this.whatIf.clearMatchScore(matchKey(m));
+  }
 }

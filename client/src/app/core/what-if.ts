@@ -15,6 +15,11 @@ export interface MatchScore {
   as: number;
 }
 
+function omit<T>(map: Record<string, T>, key: string): Record<string, T> {
+  const { [key]: removed, ...rest } = map;
+  return rest;
+}
+
 /**
  * "What-if" edit mode: manual overrides of selection outcomes so the user can
  * preview how slips would end up. Overrides live only in memory and are
@@ -61,6 +66,19 @@ export class WhatIf {
   /** Record the imagined score of one match (goals clamped at 0). */
   setMatchScore(key: string, hs: number, as: number): void {
     this.matchScores.update((m) => ({ ...m, [key]: { hs: Math.max(0, hs), as: Math.max(0, as) } }));
+  }
+
+  // per-item restore (the hover ↺ buttons)
+  clearSel(key: string): void {
+    this.overrides.update((m) => omit(m, key));
+  }
+
+  clearGroupOrder(letter: string): void {
+    this.groupOrders.update((m) => omit(m, letter));
+  }
+
+  clearMatchScore(key: string): void {
+    this.matchScores.update((m) => omit(m, key));
   }
 
   /** Drop every what-if customization, back to real data. */

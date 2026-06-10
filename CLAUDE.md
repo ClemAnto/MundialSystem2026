@@ -50,6 +50,9 @@
 - **Override su tag stilizzati da ng-zorro** (`h1..h6`, `a`, `th`, ...): le utility Tailwind v4 vivono in un
   layer a bassa priorità e perdono contro le regole per-tag (non-layered) di ng-zorro. Per vincere, usare
   una **classe non-layered** in `styles.css` (es. `.app-title`) o, in subordine, l'important modifier. Vedi MEMO §10.
+- **Palette/colori condivisi** in `core/colors.ts` (es. `obbligoRowBg`): non duplicare gli hex nei componenti.
+- **Animazioni espandi/collassa** riusabili: classi `.expand-wrap`/`.expand-open`/`.expand-panel` in
+  `styles.css` (trick `grid-template-rows: 0fr → 1fr` per animare verso `height:auto`).
 
 ## Prima di consegnare una modifica
 

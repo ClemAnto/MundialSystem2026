@@ -33,7 +33,12 @@
                   </td>
                   <td class="px-2 py-1 text-right tabular-nums">{{ s.q.toFixed(2) }}</td>
                   <td class="px-2 py-1 text-center font-bold text-green-700">
-                    @if (whatIf.editMode()) {
+                    @if (whatIf.editMode() && isOverridden(b.n, s)) {
+                      <!-- customized outcome: on row hover the check gives way to the restore button -->
+                      <span class="group-hover:hidden">{{ s.bothQual ? '✔' : '' }}</span>
+                      <button type="button" class="reset-btn" title="Ripristina l'esito reale"
+                              (click)="resetSel($event, b.n, s)">↺</button>
+                    } @else if (whatIf.editMode()) {
                       <!-- hover preview of the toggle: faint check appears (or the real one fades) -->
                       <span class="transition-opacity duration-200 group-hover:opacity-50"
                             [class.opacity-0]="!s.bothQual">✔</span>

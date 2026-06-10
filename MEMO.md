@@ -283,11 +283,20 @@ e applicata dal motore `BetEngine.computeAll(...)` (override ✔, ordini-gruppo 
   `grid-template-rows: 0fr → 1fr`, lettera del gruppo in un cerchio blu); hover su una selezione perdente
   → evidenzia la card del gruppo correlato (ring blu; ring ambra = gruppo con classifica custom).
 - Tastino **reset** (icona reload) nell'header, visibile solo con modifiche attive: azzera tutto.
-- **Incontri**: stepper −/+ per impostare il risultato di ogni partita (`matchScores`: chiave
-  `home|away`). Il motore "rigioca" i punteggi custom sopra le classifiche reali
-  (`applyMatchScores`): sottrae il risultato reale solo se già conteggiato (status `FINISHED`) e
-  ignora la posizione ufficiale API nei gruppi toccati (diventa stantia → rango calcolato). Righe
-  custom evidenziate in ambra + badge WHAT-IF.
+- **Ripristino puntuale**: ogni informazione customizzata mostra in hover un tastino **↺**
+  (classe globale `.reset-btn`, rivelata da `.group:hover`): selezione forzata (cella ✔ delle
+  bollette), classifica trascinata (header card gruppo, variante `.on-dark`), risultato custom
+  (riga incontro). Service: `clearSel` / `clearGroupOrder` / `clearMatchScore`.
+- Tasto What-if attivo: **bordo dorato animato** = wrapper `.whatif-wrap` leggermente più largo del
+  bottone con `conic-gradient` rotante (`@property --whatif-angle`). ⚠️ Lo stesso effetto con
+  `::before` a `z-index:-1` NON funziona: con stacking context sul bottone il pseudo copre il
+  background; senza, finisce dietro lo sfondo dell'header.
+- **Incontri**: stepper a box unico `[− 0 +]` per lato (`.score-stepper`, ambra se custom) per
+  impostare il risultato di ogni partita (`matchScores`: chiave `home|away`). Il motore "rigioca"
+  i punteggi custom sopra le classifiche reali (`applyMatchScores`): sottrae il risultato reale
+  solo se già conteggiato (status `FINISHED`) e ignora la posizione ufficiale API nei gruppi
+  toccati (diventa stantia → rango calcolato). Righe custom evidenziate in ambra (niente badge,
+  solo ↺ in hover). Mini-classifiche con icone obbligo ✅/⛔/· come nei Gruppi.
 - Precedenze: classifiche custom (drag) > punteggi custom (incontri) > dati reali; il click sulla
   selezione (✔) vince comunque sul `bothQual` derivato da tutto il resto.
 - Dipendenza aggiunta: **`@angular/cdk`** (drag-drop), ora diretta in `package.json`.

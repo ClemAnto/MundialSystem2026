@@ -1,22 +1,42 @@
-/* -/+ goal stepper. Plain CSS (not Tailwind utilities) so it also wins over
-   ng-zorro's unlayered bare-<button> rules (see MEMO #10). */
-.stepper {
+/* One-box goal stepper: [- 0 +]. Plain CSS (not Tailwind utilities) so it also
+   wins over ng-zorro's unlayered bare-<button> rules (see MEMO #10). */
+.score-stepper {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.375rem;
+  background-color: #f1f5f9;
+  padding: 1px 2px;
+  transition: background-color 200ms;
+}
+.score-stepper.custom {
+  background-color: #fde68a; /* amber-200: customized score */
+}
+.score-stepper .step {
   display: flex;
-  height: 1.1rem;
-  width: 1.1rem;
+  height: 1rem;
+  width: 1rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background-color: #e2e8f0;
-  color: #475569;
+  background: none;
+  color: #64748b;
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  transition: background-color 150ms;
+  transition:
+    color 150ms,
+    background-color 150ms;
 }
-.stepper:hover {
-  background-color: #cbd5e1;
+.score-stepper .step:hover {
+  background-color: rgb(0 0 0 / 0.08);
+  color: #0f172a;
+}
+.score-stepper .val {
+  min-width: 1rem;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /* On <button> Tailwind's ml-auto loses against ng-zorro's unlayered tag rules (MEMO #10). */
