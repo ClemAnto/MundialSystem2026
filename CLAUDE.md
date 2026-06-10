@@ -1,7 +1,7 @@
 # 📐 CLAUDE.md — convenzioni e preferenze (Bolletta Mondiale 2026)
 
-> Come si lavora su questo progetto. Deriva da `PROJECT-BLUEPRINT.md` (guida generale), qui adattato.
-> Leggere insieme a `MEMO.md` (tecnico) e `ROADMAP.md` (avanzamento).
+> Come si lavora su questo progetto. Deriva da `PROJECT-BLUEPRINT.md` (guida generale, ora in
+> `~\claude-config\`), qui adattato. Leggere insieme a `MEMO.md` (tecnico) e `ROADMAP.md` (avanzamento).
 
 ## Quando leggere quale `.md`
 
@@ -10,7 +10,7 @@
 | Setup, struttura, decisioni tecniche + perché, fatti verificati, trappole | `MEMO.md` |
 | A che punto siamo, prossimo passo, checklist per fase | `ROADMAP.md` |
 | Convenzioni di lavoro, preferenze utente, come decidere | `CLAUDE.md` (questo) |
-| Guida generale riusabile su altri progetti | `PROJECT-BLUEPRINT.md` |
+| Guida generale riusabile su altri progetti | `~\claude-config\PROJECT-BLUEPRINT.md` (spostato lì il 2026-06-10) |
 
 ## Preferenze dell'utente (guidano ogni decisione)
 
