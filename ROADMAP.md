@@ -4,10 +4,10 @@
 
 ## Dove eravamo / Prossimo passo
 
-- **Stato (2026-06-10 notte)**: **v0.2.0 pubblicata e verificata live** (commit `a60bc3a`, run verde,
-  `index.html` online controllato). Include: What-if completo (✔, drag classifiche, punteggi
-  incontri, ripristini puntuali ↺, reset con popconfirm, glow dorato), sintesi bollette riusabile,
-  countdown header, branding (favicon + logo header), loader a pallone, dati dal Feed.
+- **Stato (2026-06-10 notte)**: **v0.3.0 pubblicata e verificata live** (commit `41661aa`, run verde
+  in 10s, `index.html` live controllato: `data-theme="mundial"` + hash bundle combacianti).
+  Include tutto v0.2.0 (What-if completo, sintesi riusabile, countdown, branding, loader) + il
+  **sistema di temi** con il tema **mundial** attivo.
 - **Sessione 2026-06-10 (sera)**: introdotto il **sistema di temi** (token CSS in
   `client/src/app/styles/themes/`, mapping Tailwind `@theme inline`, ng-zorro su variable.css,
   tema custom "mundial" dai colori del logo). Build verde, verifica visiva OK. **v0.3.0 pubblicata

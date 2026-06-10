@@ -247,7 +247,11 @@ I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = 
 - **Verifica visiva**: per controllare il rendering reale uso screenshot headless di Chrome
   (`chrome --headless=new --force-device-scale-factor=2 --window-size=W,H --screenshot=out.png URL`) e leggo
   il PNG. Più affidabile che dedurre il layout dal CSS. (Se lancio più istanze headless in parallelo può
-  servire un `--user-data-dir` dedicato per evitare lock.)
+  servire un `--user-data-dir` dedicato per evitare lock. Se lo screenshot non viene scritto senza errori
+  visibili, riprovare con un `--user-data-dir` NUOVO: capita un fallimento transitorio da profilo sporco.)
+- **`ng serve` in background da PowerShell: MAI in pipe** (`| Select-Object -First N` & simili): quando
+  la pipeline si chiude il processo serve viene terminato (il server "muore" silenziosamente dopo poco).
+  Lanciarlo nudo in background e leggere l'output dal file del task.
 - **Feed CSV (no token)**: "Pubblica sul web → CSV" mette il JSON in una cella → la risposta è il JSON con
   le virgolette **raddoppiate** e racchiuso tra `"`. L'app fa l'unescape (`parseFeed` in `data-loader.ts`:
   togli BOM, togli i `"` esterni, `""`→`"`, poi `JSON.parse`). L'URL 307-redirige a googleusercontent; la
@@ -261,6 +265,7 @@ I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = 
 - **Versione app nell'header**: letta da `package.json` via `import` (richiede `resolveJsonModule: true`
   in `tsconfig.json`) → sempre sincronizzata, niente costanti duplicate. **Bumpare la versione**
   a ogni rilascio percepibile (l'utente la usa per verificare che il deploy sia arrivato).
+  Dopo il bump allineare il lockfile con `npm install --package-lock-only` (non editarlo a mano).
 - **Immagini senza ImageMagick**: favicon (128px) e logo header (40px) generati da
   `assets/MundialSystem2026_logo.png` con **System.Drawing in PowerShell** (Bitmap + Graphics,
   interpolazione HighQualityBicubic). Niente dipendenze esterne.

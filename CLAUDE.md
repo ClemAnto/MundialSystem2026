@@ -68,6 +68,8 @@
 - **MAI pushare/deployare senza richiesta esplicita dell'utente.** Il push su `main` avvia da solo
   il deploy su Pages (GitHub Actions) → anche il semplice `git push` conta come deploy.
   Commit locali liberi; push solo quando l'utente lo chiede.
+- **Messaggi di commit** (preferenza globale, vale ovunque): in **inglese**, titolo di poche parole,
+  corpo breve; **MAI** `Co-Authored-By: Claude` o altre firme dell'assistente.
 
 ## Prima di consegnare una modifica
 
