@@ -20,7 +20,7 @@ function pad(x: number): string {
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, NzMenuModule, NzIconModule, NzPopconfirmModule, DatePipe],
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  styleUrl: './styles/components/app.css',
 })
 export class App {
   protected readonly loader = inject(DataLoader);

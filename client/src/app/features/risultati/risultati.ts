@@ -11,7 +11,7 @@ import { SintesiBollette } from '../sintesi-bollette/sintesi-bollette';
   selector: 'app-risultati',
   imports: [NzIconModule, SintesiBollette],
   templateUrl: './risultati.html',
-  styleUrl: './risultati.css',
+  styleUrl: '../../styles/components/risultati.css',
 })
 export class Risultati {
   protected readonly loader = inject(DataLoader);

@@ -10,7 +10,7 @@ import { SintesiBollette } from '../sintesi-bollette/sintesi-bollette';
   selector: 'app-gironi',
   imports: [CdkDropList, CdkDrag, SintesiBollette],
   templateUrl: './gironi.html',
-  styleUrl: './gironi.css',
+  styleUrl: '../../styles/components/gironi.css',
 })
 export class Gironi {
   protected readonly loader = inject(DataLoader);

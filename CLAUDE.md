@@ -24,6 +24,10 @@
 - **Utente principiante sul backend** → spiegare in modo elementare, con analogie, dicendo sempre il *perché*.
 - **Segnalare refusi/errori grammaticali** (IT ed EN) in codice, stringhe, commenti, doc — anche fuori dal
   task. Non correggerli d'ufficio senza chiedere, salvo che sia parte del task.
+- **Gusto UI emerso (2026-06-10)**: micro-transizioni leggere ovunque (mai comparse "secche":
+  preferire opacity/altezza animata); tocchi giocosi (emoji 🙁/⚽, glow dorato); niente etichette
+  ridondanti se lo stato è già comunicato dal colore/posizione; le azioni distruttive (reset)
+  chiedono conferma; i controlli contestuali compaiono in hover senza spostare il layout.
 
 ## Regola lingua (ferrea)
 
@@ -50,7 +54,12 @@
 - **Override su tag stilizzati da ng-zorro** (`h1..h6`, `a`, `th`, ...): le utility Tailwind v4 vivono in un
   layer a bassa priorità e perdono contro le regole per-tag (non-layered) di ng-zorro. Per vincere, usare
   una **classe non-layered** in `styles.css` (es. `.app-title`) o, in subordine, l'important modifier. Vedi MEMO §10.
-- **Palette/colori condivisi** in `core/colors.ts` (es. `obbligoRowBg`): non duplicare gli hex nei componenti.
+- **Colori SOLO dai token del tema** (`app/styles/themes/`): nei template usare le utility semantiche
+  (`bg-primary`, `text-success`, `border-border`, …) — la palette Tailwind di default è disattivata;
+  nei CSS usare `var(--token)`; per gli stili inline passare da `core/colors.ts` (es. `obbligoRowBg`,
+  che espone `var(--outcome-*)`). Mai hex nei componenti. Vedi MEMO §12.
+- **Tutti i CSS/SCSS in `app/styles/`** (entry `styles.css`, temi in `themes/`, stili per-componente
+  in `components/` referenziati da `styleUrl`). Non creare `.css` accanto ai componenti.
 - **Animazioni espandi/collassa** riusabili: classi `.expand-wrap`/`.expand-open`/`.expand-panel` in
   `styles.css` (trick `grid-template-rows: 0fr → 1fr` per animare verso `height:auto`).
 

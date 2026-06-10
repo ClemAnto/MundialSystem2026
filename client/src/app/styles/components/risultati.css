@@ -3,13 +3,13 @@
 .score-stepper {
   display: inline-flex;
   align-items: center;
-  border-radius: 0.375rem;
-  background-color: #f1f5f9;
+  border-radius: var(--radius-control);
+  background-color: var(--surface-muted);
   padding: 1px 2px;
   transition: background-color 200ms;
 }
 .score-stepper.custom {
-  background-color: #fde68a; /* amber-200: customized score */
+  background-color: var(--accent-muted); /* customized score */
 }
 .score-stepper .step {
   display: flex;
@@ -19,7 +19,7 @@
   justify-content: center;
   border-radius: 9999px;
   background: none;
-  color: #64748b;
+  color: var(--foreground-soft);
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
@@ -30,7 +30,7 @@
 }
 .score-stepper .step:hover {
   background-color: rgb(0 0 0 / 0.08);
-  color: #0f172a;
+  color: var(--foreground);
 }
 .score-stepper .val {
   min-width: 1rem;
@@ -45,12 +45,12 @@
 }
 
 /* The floating restore button overlays the away-team name: give it a solid
-   backdrop (same amber as the custom row) so the glyphs don't blend. */
+   backdrop (same accent tint as the custom row) so the glyphs don't blend. */
 li .reset-btn {
-  background-color: #fffbeb; /* amber-50 = custom row bg */
-  box-shadow: 0 0 0 3px #fffbeb;
+  background-color: var(--accent-soft); /* = custom row bg */
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 li .reset-btn:hover {
-  background-color: #fde68a; /* amber-200 */
-  color: #92400e;
+  background-color: var(--accent-muted);
+  color: var(--accent-strong);
 }

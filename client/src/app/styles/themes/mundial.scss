@@ -1,0 +1,23 @@
+/* "Mundial" theme — colors sampled from assets/MundialSystem2026_logo.png:
+ * night-stadium navy, golden-ball gold, pitch green ("2026").
+ *
+ * Only the tokens that differ from the default theme are listed; everything
+ * else falls back to :root (themes/default.scss).
+ * Activate with <html data-theme="mundial"> in index.html. */
+[data-theme='mundial'] {
+  /* Brand: night navy from the stadium background */
+  --primary: #14264a;
+  --primary-light: #1e3c74;
+
+  /* Accent: the golden ball (#f0b00a sampled) */
+  --accent: #f0b00a;
+  --accent-foreground: #4a2e02;
+  --accent-strong: #8a5a06;
+  --accent-soft: #fdf6e0;
+  --accent-muted: #f9e29b;
+  --accent-line: #f3cd5e;
+
+  /* Status */
+  --success: #417d13; /* the "2026" green */
+  --info: #38bdf8; /* stadium floodlights */
+}

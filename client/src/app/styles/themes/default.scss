@@ -1,0 +1,71 @@
+/* Default theme — every color/font/shape token of the app lives here.
+ *
+ * Tokens are plain CSS custom properties on :root. Tailwind utilities are
+ * generated from them in styles.css (@theme inline), so `bg-primary`,
+ * `text-success`, ... always follow the active theme.
+ *
+ * To create a new theme: copy this file, scope the block to
+ * [data-theme='<name>'], keep ONLY the tokens you want to override
+ * (the rest falls back to :root), and add the file to angular.json "styles".
+ * Activate it with <html data-theme="<name>"> in index.html. */
+:root {
+  /* Brand */
+  --primary: #1f4e78; /* headers, card titles */
+  --primary-light: #2a6aa3; /* sub-headers */
+  --primary-foreground: #ffffff; /* text on primary */
+
+  /* Accent (gold) — what-if / simulation states */
+  --accent: #fbbf24; /* badges, active what-if button */
+  --accent-foreground: #78350f; /* text on accent */
+  --accent-strong: #92400e; /* accent-colored text on light backgrounds */
+  --accent-soft: #fffbeb; /* tinted background (customized rows, banners) */
+  --accent-muted: #fde68a; /* stronger tinted background (customized score) */
+  --accent-line: #fcd34d; /* borders of accent-tinted boxes */
+
+  /* Status */
+  --success: #15803d; /* winning checks and amounts */
+  --danger: #dc2626; /* live-match badge background */
+  --danger-foreground: #ffffff; /* text on danger */
+  --danger-strong: #b91c1c; /* danger-colored text on light backgrounds */
+  --danger-soft: #fee2e2; /* tinted background (LIVE pill) */
+  --danger-muted: #fca5a5; /* error text on the dark header */
+  --warning: var(--accent); /* alias: warnings share the gold family */
+  --info: #0ea5e9; /* hovered-group ring highlight */
+
+  /* Neutrals */
+  --background: #f8fafc; /* page background, soft panels */
+  --surface: #ffffff; /* cards, nav */
+  --surface-muted: #f1f5f9; /* neutral pills (score, counters) */
+  --surface-hover: rgb(226 232 240 / 0.7); /* hover tint on light rows */
+  --border: #e2e8f0; /* card and nav borders */
+  --border-strong: #cbd5e1; /* group separators, totals row */
+  --border-soft: #f1f5f9; /* list dividers */
+  --foreground: #1e293b; /* default text */
+  --foreground-muted: #475569; /* secondary text (labels) */
+  --foreground-soft: #64748b; /* tertiary text (hints, counters) */
+  --foreground-faint: #94a3b8; /* faint text (placeholders, chevrons) */
+
+  /* Outcome palette — soft colors identical to the Excel sheet (MEMO §6).
+     Used via inline [style.background] from core/colors.ts. */
+  --outcome-pass: #d9f2e1; /* green: favourable / definitive winner */
+  --outcome-fail: #fbd9e6; /* pink: unfavourable / definitive without winner */
+  --outcome-open: #fcf1b8; /* yellow: open without winners */
+  --outcome-lost: #f9d6d6; /* red: slip definitively lost */
+  --outcome-pass-strong: #c7e6d3; /* darker variants to tell odd groups apart */
+  --outcome-fail-strong: #f6c7da;
+  --outcome-open-strong: #f7e69c;
+  --outcome-neutral: #f4f6f9; /* open with one pair already winning */
+
+  /* Typography */
+  --font-app:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-size-base: 14px;
+
+  /* Shape & elevation */
+  --radius-badge: 0.25rem; /* small chips and badges */
+  --radius-control: 0.375rem; /* buttons, steppers */
+  --radius-card: 0.5rem; /* cards */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-drag: 0 4px 12px rgb(0 0 0 / 0.25); /* drag&drop preview */
+}

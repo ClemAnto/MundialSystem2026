@@ -6,7 +6,7 @@
 } @else if (byGroup().length) {
   <div class="expand-wrap" [class.expand-open]="whatIf.editMode()">
     <div class="overflow-hidden">
-      <div class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
+      <div class="mb-4 rounded border border-accent-line bg-accent-soft px-3 py-1.5 text-xs text-accent-strong">
         Usa − e + per impostare il risultato degli incontri
       </div>
     </div>
@@ -14,14 +14,14 @@
   <div class="flex flex-col gap-4 lg:flex-row">
     <div class="grid flex-1 content-start items-start grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       @for (g of byGroup(); track g.letter) {
-        <div class="h-fit overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow duration-200"
+        <div class="h-fit overflow-hidden rounded-lg border border-border bg-surface shadow-sm transition-shadow duration-200"
              [class.ring-2]="sintesi().hoveredGroup() === g.letter"
-             [class.ring-sky-500]="sintesi().hoveredGroup() === g.letter">
-          <div class="flex items-center bg-[#1f4e78] px-3 py-1.5 text-sm font-bold text-white">
+             [class.ring-info]="sintesi().hoveredGroup() === g.letter">
+          <div class="flex items-center bg-primary px-3 py-1.5 text-sm font-bold text-primary-foreground">
             GRUPPO {{ g.letter }}
             <button type="button"
-                    class="standings-toggle flex cursor-pointer items-center rounded p-1 transition-colors hover:bg-white/20"
-                    [class]="isStandingsOpen(g.letter) ? 'bg-white/20' : ''"
+                    class="standings-toggle flex cursor-pointer items-center rounded p-1 transition-colors hover:bg-primary-foreground/20"
+                    [class]="isStandingsOpen(g.letter) ? 'bg-primary-foreground/20' : ''"
                     (click)="toggleStandings(g.letter)"
                     title="Mostra/nascondi la classifica del gruppo">
               <span nz-icon nzType="ordered-list" class="flex leading-none"></span>
@@ -32,13 +32,13 @@
           <div class="expand-wrap" [class.expand-open]="isStandingsOpen(g.letter)">
             <div class="overflow-hidden">
               @if (standings(g.letter); as gv) {
-                <div class="border-b-2 border-slate-200 text-xs">
+                <div class="border-b-2 border-border text-xs">
                   @for (row of gv.rows; track row.team) {
                     <div class="flex items-center gap-2 px-3 py-1 transition-colors duration-200"
                          [style.backgroundColor]="rowBg(row.obbligo, row.pos)">
-                      <span class="w-3 text-right font-semibold text-slate-500">{{ row.pos }}</span>
+                      <span class="w-3 text-right font-semibold text-foreground-soft">{{ row.pos }}</span>
                       <span class="flex-1 truncate">{{ row.team }}</span>
-                      <span class="font-bold tabular-nums">{{ row.pts }} <span class="font-normal text-slate-400">pt</span></span>
+                      <span class="font-bold tabular-nums">{{ row.pts }} <span class="font-normal text-foreground-faint">pt</span></span>
                       <span class="w-4 text-center">{{ row.icon }}</span>
                     </div>
                   }
@@ -47,10 +47,10 @@
             </div>
           </div>
 
-          <ul class="divide-y divide-slate-100 text-sm">
+          <ul class="divide-y divide-border-soft text-sm">
             @for (m of g.matches; track $index) {
               <li class="group relative flex items-center gap-2 px-3 py-2 transition-colors duration-200"
-                  [class.bg-amber-50]="isCustom(m)">
+                  [class.bg-accent-soft]="isCustom(m)">
                 <span class="flex-1 truncate text-right" [title]="m.home">{{ m.home }}</span>
                 @if (whatIf.editMode()) {
                   <span class="score-stepper" [class.custom]="isCustom(m)">
@@ -58,7 +58,7 @@
                     <span class="val">{{ goals(m, 'hs') }}</span>
                     <button type="button" class="step" (click)="bump(m, 'hs', 1)">+</button>
                   </span>
-                  <span class="text-xs text-slate-400">-</span>
+                  <span class="text-xs text-foreground-faint">-</span>
                   <span class="score-stepper" [class.custom]="isCustom(m)">
                     <button type="button" class="step" (click)="bump(m, 'as', -1)">−</button>
                     <span class="val">{{ goals(m, 'as') }}</span>
@@ -66,12 +66,12 @@
                   </span>
                 } @else if (played(m) || isCustom(m)) {
                   <span class="rounded px-2 py-0.5 font-bold tabular-nums"
-                        [class.bg-amber-200]="isCustom(m)"
-                        [class.bg-slate-100]="!isCustom(m)">
+                        [class.bg-accent-muted]="isCustom(m)"
+                        [class.bg-surface-muted]="!isCustom(m)">
                     {{ goals(m, 'hs') }} - {{ goals(m, 'as') }}
                   </span>
                 } @else {
-                  <span class="px-2 text-xs text-slate-400">vs</span>
+                  <span class="px-2 text-xs text-foreground-faint">vs</span>
                 }
                 <span class="flex-1 truncate" [title]="m.away">{{ m.away }}</span>
                 @if (isCustom(m)) {
@@ -80,7 +80,7 @@
                           (click)="resetScore(m)">↺</button>
                 }
                 @if (m.status === 'IN_PLAY' || m.status === 'PAUSED') {
-                  <span class="rounded bg-red-100 px-1.5 text-xs font-semibold text-red-700">LIVE</span>
+                  <span class="rounded bg-danger-soft px-1.5 text-xs font-semibold text-danger-strong">LIVE</span>
                 }
               </li>
             }
@@ -94,5 +94,5 @@
     </aside>
   </div>
 } @else {
-  <p class="text-slate-500">Nessuna partita disponibile.</p>
+  <p class="text-foreground-soft">Nessuna partita disponibile.</p>
 }

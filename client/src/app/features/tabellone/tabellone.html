@@ -2,14 +2,14 @@
   <!-- auto-fill keeps every card at least 12rem wide: bet rows stay fully visible at any viewport -->
   <div class="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3">
     @for (b of m.bollette; track b.n) {
-      <div class="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div class="bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">
+      <div class="flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+        <div class="bg-primary px-3 py-2 text-sm font-bold text-primary-foreground">
           BOLLETTA {{ b.n }} <span class="font-normal opacity-80">({{ euro(b.imp) }})</span>
         </div>
 
         <table class="w-full text-xs">
           <thead>
-            <tr class="bg-[#1f4e78] text-white">
+            <tr class="bg-primary text-primary-foreground">
               <th class="px-2 py-1 text-left font-semibold">Gr</th>
               <th class="px-2 py-1 text-left font-semibold">Coppia</th>
               <th class="px-2 py-1 text-right font-semibold">Q</th>
@@ -23,16 +23,16 @@
                     [style.background]="groupBg(g.code, oddGroup)"
                     [class.border-t-2]="$first"
                     [class.border-b-2]="lastGroup && $last"
-                    [class.border-slate-300]="$first || (lastGroup && $last)"
+                    [class.border-border-strong]="$first || (lastGroup && $last)"
                     [class.cursor-pointer]="whatIf.editMode()"
                     [class.row-editable]="whatIf.editMode()"
                     (click)="onRowClick(b.n, s)">
-                  <td class="px-2 py-1 font-semibold text-slate-600">{{ $first ? g.grp : '' }}</td>
+                  <td class="px-2 py-1 font-semibold text-foreground-muted">{{ $first ? g.grp : '' }}</td>
                   <td class="px-2 py-1 whitespace-nowrap" [title]="s.t1 + ' / ' + s.t2">
                     {{ abbr(s.t1) }} / {{ abbr(s.t2) }}
                   </td>
                   <td class="px-2 py-1 text-right tabular-nums">{{ s.q.toFixed(2) }}</td>
-                  <td class="relative px-2 py-1 text-center font-bold text-green-700">
+                  <td class="relative px-2 py-1 text-center font-bold text-success">
                     @if (whatIf.editMode() && isOverridden(b.n, s)) {
                       <!-- customized outcome: on row hover the check fades and the restore button overlays it -->
                       <span class="transition-opacity duration-150 group-hover:opacity-0">{{ s.bothQual ? '✔' : '' }}</span>
@@ -54,7 +54,7 @@
           </tbody>
         </table>
 
-        <div class="mt-auto px-3 py-2 text-center text-sm font-bold text-[#1f4e78]"
+        <div class="mt-auto px-3 py-2 text-center text-sm font-bold text-primary"
              [style.background]="footBg(b.code)" [title]="b.stato">
           {{ b.code > 0 ? '✔' : '🙁' }} Vincita Pot. {{ euro(b.vincita) }}
         </div>

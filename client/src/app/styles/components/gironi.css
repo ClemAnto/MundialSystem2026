@@ -9,8 +9,8 @@
   opacity: 0.35;
 }
 .cdk-drag-preview {
-  border-radius: 0.25rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-badge);
+  box-shadow: var(--shadow-drag);
   /* solid fallback: never drag a see-through row (colored rows keep their inline bg) */
-  background-color: #fff;
+  background-color: var(--surface);
 }

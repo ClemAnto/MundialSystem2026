@@ -87,6 +87,7 @@ separata (GitHub Actions, vedi §8): l'app cambia di rado, i dati ~ogni minuto d
 | `dist/Mondiali2026_Scommesse.xlsx` | Output del generatore Excel. |
 | `client/public/data.json` | Esempio statico di dati (per dev/UI). In produzione l'app legge il CSV del Feed. |
 | `client/src/app/core/` | Motore (`bet-engine`), caricatore dati (`data-loader`), tipi (`model`), sigle (`team-abbr`), colori condivisi (`colors`), what-if (`what-if`), dati statici generati (`bets-data`). |
+| `client/src/app/styles/` | **Tutti i CSS/SCSS**: `styles.css` (entry Tailwind + mapping token→utility), `themes/` (token dei temi), `components/` (stili per-componente, referenziati da `styleUrl`). Vedi §12. |
 | `client/src/app/features/sintesi-bollette/` | Componente riusabile "SINTESI BOLLETTE" (usato in Gruppi e Incontri). |
 | `.github/workflows/` | Workflow di build & deploy su GitHub Pages. |
 | `ref/` | Immagini di riferimento delle bollette giocate (scontrini). |
@@ -140,6 +141,9 @@ K: Portogallo, Colombia, Rd Congo, *Uzbekistan* · L: Inghilterra, Croazia, Ghan
 
 `verde D9F2E1` · `rosa FBD9E6` · `giallo FCF1B8` · `rosso F9D6D6`
 
+> Dal 2026-06-10 questi hex vivono SOLO in `client/src/app/styles/themes/default.scss` come token
+> `--outcome-*`; `core/colors.ts` espone `var(--outcome-…)` (vedi §12). Non reintrodurre hex nei componenti.
+
 **Gironi** (verde = favorevole alle scommesse, rosa = sfavorevole):
 - ✅ DEVE passare (in tutte le coppie del girone): verde se Pos ≤ 2, rosa se Pos > 2.
 - ⛔ NON deve passare (4ª, mai giocata): verde se Pos > 2, rosa se Pos ≤ 2.
@@ -184,7 +188,8 @@ I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = 
   (`docs.google.com/spreadsheets/d/e/.../pub?gid=1925420550&single=true&output=csv`). L'URL è in
   `client/src/app/core/data-loader.ts` (`DATA_URL`); CORS verificato. Per il dev locale si può rimettere
   `DATA_URL = 'data.json'`.
-- **Pubblicato il 2026-06-10** (commit `647d910`, run Actions verde, sito verificato con screenshot):
+- **Pubblicato il 2026-06-10** — ultimo deploy: **v0.2.0**, commit `a60bc3a`, run verde,
+  `index.html` live verificato (bundle hash + favicon). Prima pubblicazione (commit `647d910`):
   il sito live usa il Feed e tutte le feature (What-if, countdown, sintesi).
 - **Cache browser dopo un deploy** (verificato 2026-06-10): GitHub Pages serve TUTTO con
   `Cache-Control: max-age=600` + ETag, **non configurabile**. I bundle JS/CSS hanno l'hash nel nome →
@@ -254,7 +259,15 @@ I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = 
   (con `127.0.0.1` → connection refused). E se si tocca `tsconfig.json` va **riavviato** (l'overlay
   d'errore HMR resta stantio anche dopo il fix).
 - **Versione app nell'header**: letta da `package.json` via `import` (richiede `resolveJsonModule: true`
-  in `tsconfig.json`) → sempre sincronizzata, niente costanti duplicate.
+  in `tsconfig.json`) → sempre sincronizzata, niente costanti duplicate. **Bumpare la versione**
+  a ogni rilascio percepibile (l'utente la usa per verificare che il deploy sia arrivato).
+- **Immagini senza ImageMagick**: favicon (128px) e logo header (40px) generati da
+  `assets/MundialSystem2026_logo.png` con **System.Drawing in PowerShell** (Bitmap + Graphics,
+  interpolazione HighQualityBicubic). Niente dipendenze esterne.
+- **Diagnostica IDE spesso stantia** dopo edit rapidi a coppie .ts/.html (falsi errori su viewChild,
+  imports, elementi sconosciuti): la verità è `npm run build`. Idem l'overlay HMR di `ng serve`.
+- **Una sola `transform` per elemento**: per comporre due animazioni transform (es. rimbalzo +
+  squash del pallone-loader, `.ball-loader` in `styles.css`) servono **due elementi annidati**.
 - **Cadenza aggiornamento = 1 minuto** (deciso 2026-06-10). I trigger Apps Script non scendono sotto 1 min
   (valori ammessi 1/5/10/15/30); i 30 s richiederebbero un `sleep`-hack che brucia la quota runtime durante
   le partite (~90 min/giorno su Gmail free; ~6 h su Workspace, e `@quadronica.com` è verosimilmente Workspace).
@@ -282,7 +295,9 @@ e applicata dal motore `BetEngine.computeAll(...)` (override ✔, ordini-gruppo 
   su una riga perdente → espande l'elenco delle selezioni perdenti per girone (altezza animata col trick
   `grid-template-rows: 0fr → 1fr`, lettera del gruppo in un cerchio blu); hover su una selezione perdente
   → evidenzia la card del gruppo correlato (ring blu; ring ambra = gruppo con classifica custom).
-- Tastino **reset** (icona reload) nell'header, visibile solo con modifiche attive: azzera tutto.
+- Tastino **reset** (icona reload) nell'header, visibile solo con modifiche attive: azzera tutto
+  **previa conferma** (nz-popconfirm "Azzerare tutte le modifiche what-if?"; icona
+  `ExclamationCircleFill` registrata; overlay ng-zorro ≈ +13 kB gzip).
 - **Ripristino puntuale**: ogni informazione customizzata mostra in hover un tastino **↺**
   (classe globale `.reset-btn`, rivelata da `.group:hover`): selezione forzata (cella ✔ delle
   bollette), classifica trascinata (header card gruppo, variante `.on-dark`), risultato custom
@@ -303,3 +318,39 @@ e applicata dal motore `BetEngine.computeAll(...)` (override ✔, ordini-gruppo 
 - Precedenze: classifiche custom (drag) > punteggi custom (incontri) > dati reali; il click sulla
   selezione (✔) vince comunque sul `bothQual` derivato da tutto il resto.
 - Dipendenza aggiunta: **`@angular/cdk`** (drag-drop), ora diretta in `package.json`.
+
+---
+
+## 12. Sistema di temi (2026-06-10)
+
+Tutti gli stili vivono in `client/src/app/styles/`; **nessun colore hardcoded** fuori dai temi.
+
+**Architettura (pattern standard a 2 livelli, stile shadcn/ui):**
+- `themes/default.scss` — i **token** (CSS custom properties su `:root`): colori semantici
+  (`--primary`, `--accent`, `--success`, `--danger*`, `--info`, `--surface*`, `--border*`,
+  `--foreground*`), palette outcome del foglio (`--outcome-*`, vedi §6), tipografia
+  (`--font-app`, `--font-size-base`), forma (`--radius-badge/control/card`, `--shadow-card/drag`).
+- `themes/mundial.scss` — primo tema custom, colori campionati dal logo (`assets/…_logo.png`
+  via System.Drawing: navy `#14264a`, oro `#f0b00a`, verde `#417d13`). Scope
+  `[data-theme='mundial']`: **override solo dei token che cambiano**, il resto eredita da `:root`.
+  Si attiva con `<html data-theme="mundial">` in `index.html`.
+- `styles.css` — entry Tailwind: `@theme { --color-*: initial }` **disattiva la palette di default**
+  (un `bg-amber-50` residuo non genera nulla → si vede subito), poi `@theme inline` mappa i token
+  sulle utility (`bg-primary`, `text-success`, `border-border`, `ring-info`, …). `inline` fa sì che
+  l'utility risolva `var(--token)` al punto d'uso → il cambio tema a runtime funziona. Verificato
+  su doc Tailwind v4 il 2026-06-10.
+- `components/*.css` — stili per-componente (spostati qui, `styleUrl` aggiornati), usano solo `var(--…)`.
+- I temi vanno **elencati in `angular.json`** dopo `styles.css` (gli `.scss` compilano da soli).
+
+**ng-zorro segue il tema**: in `angular.json` si usa `ng-zorro-antd.variable.min.css` (build a CSS
+variables, supportata in v21 — verificato 2026-06-10) e in `app.config.ts` un `provideAppInitializer`
+legge il `--primary` computato e chiama `NzConfigService.set('theme', { primaryColor })` → ng-zorro
+deriva da solo tutta la palette ant (menu, popconfirm, focus). Default `#1890ff` sovrascritto a runtime.
+
+**Trappole:**
+- I token runtime NON devono chiamarsi come i namespace `@theme` di Tailwind (`--font-sans`,
+  `--radius-sm`…): dentro `@theme inline` il mapping `--font-sans: var(--font-sans)` sarebbe
+  auto-referente. Per questo i token si chiamano `--font-app`, `--radius-badge/control/card`.
+- Le opacity-modifier sulle utility tokenizzate funzionano (`bg-primary-foreground/15` →
+  `color-mix(in oklab, …)`); per i tint in CSS puro usare `color-mix(in srgb, var(--token) N%, transparent)`.
+- `[style.background]` con `var(--…)` funziona normalmente (gli inline style risolvono le custom property).

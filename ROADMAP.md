@@ -4,12 +4,18 @@
 
 ## Dove eravamo / Prossimo passo
 
-- **Stato (2026-06-10 sera)**: **tutto pubblicato** (commit `647d910`, deploy Actions verde, sito
-  verificato con screenshot): What-if completo (✔, drag classifiche, punteggi incontri), sintesi
-  bollette riusabile, countdown header, mini-classifiche negli Incontri, dati dal Feed.
+- **Stato (2026-06-10 notte)**: **v0.2.0 pubblicata e verificata live** (commit `a60bc3a`, run verde,
+  `index.html` online controllato). Include: What-if completo (✔, drag classifiche, punteggi
+  incontri, ripristini puntuali ↺, reset con popconfirm, glow dorato), sintesi bollette riusabile,
+  countdown header, branding (favicon + logo header), loader a pallone, dati dal Feed.
+- **Sessione 2026-06-10 (sera)**: introdotto il **sistema di temi** (token CSS in
+  `client/src/app/styles/themes/`, mapping Tailwind `@theme inline`, ng-zorro su variable.css,
+  tema custom "mundial" dai colori del logo). Build verde, verifica visiva OK (default invariato,
+  mundial funzionante). **Non ancora committato/deployato.** Vedi MEMO §12.
 - **Prossimo passo**: (1) sul Foglio installare il trigger 1 min (menu ⚽ Scommesse); (2) test
-  end-to-end alla prima partita (11/06 21:00). Nota cache: dopo un deploy i browser possono mostrare
-  la versione precedente per max 10 min (vedi MEMO §8).
+  end-to-end alla prima partita (**11/06 21:00**). Nota cache: dopo un deploy i browser possono
+  mostrare la versione precedente per max 10 min (vedi MEMO §8).
+- ⚠️ **Regola: niente push/deploy senza richiesta esplicita** (vedi CLAUDE.md).
 
 ---
 
@@ -66,8 +72,17 @@
 - [x] Incontri: in what-if risultati impostabili con −/+ per squadra, righe custom evidenziate;
       classifiche e vincite ricalcolate (drag dei Gruppi mantiene la precedenza). Vedi MEMO §11.
 - [x] Terminologia UI: GIRONE → GRUPPO ovunque (card Incontri, "gruppi ko", colonna "Gr").
-- [x] Incontri: mini-classifica a scomparsa per gruppo (toggle nell'header card, altezza animata) e
-      colonna SINTESI BOLLETTE anche qui (estratta nel componente riusabile `SintesiBollette`).
+- [x] Incontri: mini-classifica a scomparsa per gruppo (toggle nell'header card, altezza animata,
+      icone obbligo) e colonna SINTESI BOLLETTE anche qui (componente riusabile `SintesiBollette`).
+- [x] Rifiniture v0.2.0: favicon + logo 40px nell'header (generati dal logo in `assets/` via
+      System.Drawing); stepper incontri a box unico `[− 0 +]`; ripristini puntuali ↺ in hover
+      (position:absolute, nessuno shift); popconfirm sul reset globale; glow dorato animato sul
+      tasto What-if attivo (1.5px); banner info con comparsa animata; 🙁 al posto di ✖ sulle
+      bollette perdenti; loader = pallone che rimbalza con squash; versione app 0.2.0 + autore.
+- [x] **Sistema di temi**: tutti gli stili in `app/styles/`; token semantici in `themes/default.scss`
+      (colori + font/radius/shadow), mapping su utility Tailwind via `@theme inline` (palette di
+      default disattivata), ng-zorro agganciato al tema (variable.css + `NzConfigService`); primo
+      tema custom `mundial` dal logo, attivabile con `data-theme` su `<html>`. Vedi MEMO §12.
 - [ ] Rifiniture UI dopo feedback visivo (spaziature, mobile, dettagli).
 
 ## Fase 5 — Deploy

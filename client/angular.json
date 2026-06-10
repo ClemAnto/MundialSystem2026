@@ -28,8 +28,10 @@
               }
             ],
             "styles": [
-              "src/styles.css",
-              "node_modules/ng-zorro-antd/ng-zorro-antd.min.css"
+              "src/app/styles/styles.css",
+              "src/app/styles/themes/default.scss",
+              "src/app/styles/themes/mundial.scss",
+              "node_modules/ng-zorro-antd/ng-zorro-antd.variable.min.css"
             ]
           },
           "configurations": {

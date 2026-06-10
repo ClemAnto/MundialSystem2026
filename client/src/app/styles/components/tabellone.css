@@ -4,5 +4,5 @@ tr.row-editable > td {
   transition: background-color 200ms;
 }
 tr.row-editable:hover > td {
-  background-color: rgba(31, 78, 120, 0.08);
+  background-color: color-mix(in srgb, var(--primary) 8%, transparent);
 }

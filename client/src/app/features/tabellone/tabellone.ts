@@ -4,16 +4,13 @@ import { abbr } from '../../core/team-abbr';
 import { selKey, WhatIf } from '../../core/what-if';
 import { euro } from '../../core/format';
 import { SelState } from '../../core/model';
-
-const PALETTE = { green: '#d9f2e1', pink: '#fbd9e6', yellow: '#fcf1b8', red: '#f9d6d6' };
-// Slightly darker variants used to tell odd groups apart from even ones.
-const PALETTE_DARKER = { green: '#c7e6d3', pink: '#f6c7da', yellow: '#f7e69c', neutral: '#f4f6f9' };
+import { OUTCOME, OUTCOME_DARKER } from '../../core/colors';
 
 @Component({
   selector: 'app-tabellone',
   imports: [],
   templateUrl: './tabellone.html',
-  styleUrl: './tabellone.css',
+  styleUrl: '../../styles/components/tabellone.css',
 })
 export class Tabellone {
   protected readonly loader = inject(DataLoader);
@@ -40,17 +37,17 @@ export class Tabellone {
 
   /** Per-group background by outcome code; odd groups get a darker shade. */
   protected groupBg(code: number, darker: boolean): string {
-    const p = darker ? PALETTE_DARKER : PALETTE;
-    if (code === 2) return p.green;
-    if (code === -2) return p.pink;
-    if (code === -1) return p.yellow;
-    return darker ? PALETTE_DARKER.neutral : ''; // 1 = winning but still open -> neutral
+    const p = darker ? OUTCOME_DARKER : OUTCOME;
+    if (code === 2) return p.pass;
+    if (code === -2) return p.fail;
+    if (code === -1) return p.open;
+    return darker ? OUTCOME_DARKER.neutral : ''; // 1 = winning but still open -> neutral
   }
 
   /** Footer background: only when the slip is definitive. */
   protected footBg(code: number): string {
-    if (code === 2) return PALETTE.green;
-    if (code === -2) return PALETTE.red;
+    if (code === 2) return OUTCOME.pass;
+    if (code === -2) return OUTCOME.lost;
     return '';
   }
 }
