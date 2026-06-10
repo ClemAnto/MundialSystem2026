@@ -1,5 +1,6 @@
 @if (loader.model(); as m) {
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9">
+  <!-- auto-fill keeps every card at least 12rem wide: bet rows stay fully visible at any viewport -->
+  <div class="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3">
     @for (b of m.bollette; track b.n) {
       <div class="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <div class="bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">
@@ -8,25 +9,38 @@
 
         <table class="w-full text-xs">
           <thead>
-            <tr class="text-slate-500">
-              <th class="px-2 py-1 text-left font-semibold">Gir</th>
+            <tr class="bg-[#1f4e78] text-white">
+              <th class="px-2 py-1 text-left font-semibold">Gr</th>
               <th class="px-2 py-1 text-left font-semibold">Coppia</th>
               <th class="px-2 py-1 text-right font-semibold">Q</th>
               <th class="px-2 py-1 text-center font-semibold">✔</th>
             </tr>
           </thead>
           <tbody>
-            @for (g of b.groups; track g.grp) {
+            @for (g of b.groups; track g.grp; let oddGroup = $even; let lastGroup = $last) {
               @for (s of g.sels; track $index) {
-                <tr [style.background]="groupBg(g.code)"
+                <tr class="group transition-colors duration-200"
+                    [style.background]="groupBg(g.code, oddGroup)"
                     [class.border-t-2]="$first"
-                    [class.border-slate-300]="$first">
+                    [class.border-b-2]="lastGroup && $last"
+                    [class.border-slate-300]="$first || (lastGroup && $last)"
+                    [class.cursor-pointer]="whatIf.editMode()"
+                    [class.row-editable]="whatIf.editMode()"
+                    (click)="onRowClick(b.n, s)">
                   <td class="px-2 py-1 font-semibold text-slate-600">{{ $first ? g.grp : '' }}</td>
                   <td class="px-2 py-1 whitespace-nowrap" [title]="s.t1 + ' / ' + s.t2">
                     {{ abbr(s.t1) }} / {{ abbr(s.t2) }}
                   </td>
                   <td class="px-2 py-1 text-right tabular-nums">{{ s.q.toFixed(2) }}</td>
-                  <td class="px-2 py-1 text-center font-bold text-green-700">{{ s.bothQual ? '✔' : '' }}</td>
+                  <td class="px-2 py-1 text-center font-bold text-green-700">
+                    @if (whatIf.editMode()) {
+                      <!-- hover preview of the toggle: faint check appears (or the real one fades) -->
+                      <span class="transition-opacity duration-200 group-hover:opacity-50"
+                            [class.opacity-0]="!s.bothQual">✔</span>
+                    } @else {
+                      {{ s.bothQual ? '✔' : '' }}
+                    }
+                  </td>
                 </tr>
               }
             }
@@ -35,7 +49,7 @@
 
         <div class="mt-auto px-3 py-2 text-center text-sm font-bold text-[#1f4e78]"
              [style.background]="footBg(b.code)" [title]="b.stato">
-          {{ b.code > 0 ? '✔' : '✖' }} Attuale {{ euro(b.vincita) }}
+          {{ b.code > 0 ? '✔' : '✖' }} Vincita Pot. {{ euro(b.vincita) }}
         </div>
       </div>
     }

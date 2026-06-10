@@ -16,7 +16,7 @@
  *    (columns C..G, rows 4..51)
  *  - if "Config" cell B1 = ON (simulation mode) it does NOT overwrite anything
  *  - writes last-update time in Config!B2 and a human status in Config!B3
- *  - menu + trigger every 15 minutes
+ *  - menu + trigger every minute (real API calls happen only inside match windows)
  */
 
 var API_TOKEN     = '8d6827c04a6c42e0b5cad2e9d0a60397';  // free football-data.org token
@@ -82,6 +82,7 @@ function updateStandings() {
   // 1) simulation mode -> never overwrite
   if (config && String(config.getRange('B1').getValue()).toUpperCase() === 'ON') {
     setStatus(config, 'Simulazione attiva - dati live in pausa', false);
+    publishData();
     Logger.log('Simulation mode active: update skipped.');
     return;
   }
@@ -99,6 +100,7 @@ function updateStandings() {
         Utilities.formatDate(new Date(upcoming[0]), Session.getScriptTimeZone(), 'dd/MM HH:mm')
       : 'Fase a gironi terminata - nessun aggiornamento';
     setStatus(config, msg, false);
+    publishData();
     Logger.log('No match window. ' + msg);
     return;
   }
@@ -155,6 +157,7 @@ function updateStandings() {
   setStatus(config, 'Aggiornato - partite in corso (' + updated + ' squadre)', true);
   cache.put('recentlyUpdated', '1', 30);   // block further real fetches for 30s
   colorGironi();
+  publishData();
   Logger.log('Updated ' + updated + ' teams. Unmapped: ' + unmapped.length);
 }
 
@@ -199,6 +202,7 @@ function debugSimulate(gamesPerTeam) {
     config.getRange('B3').setValue('DEBUG: scenario simulato (' + gamesPerTeam + ' partite/squadra) - SIM=ON');
   }
   colorGironi();
+  publishData();
   Logger.log('Debug simulation written (' + gamesPerTeam + ' games per team).');
 }
 
@@ -256,6 +260,7 @@ function debugSimulateWinning() {
     config.getRange('B3').setValue('DEBUG: scenario costruito per far vincere la Bolletta ' + n + ' - SIM=ON');
   }
   colorGironi();
+  publishData();
   ui.alert('Scenario creato: la Bolletta ' + n + ' ora risulta VINCENTE. Apri Riepilogo/Scommesse.');
 }
 
@@ -311,8 +316,85 @@ function colorGironi() {
 function onEdit(e) {
   try {
     var n = e.range.getSheet().getName();
-    if (n === 'Classifiche' || n === 'Config') colorGironi();   // ricolora dopo modifiche/simulazione
+    if (n === 'Classifiche' || n === 'Config') { colorGironi(); publishData(); }   // ricolora + ripubblica
   } catch (err) {}
+}
+
+// ============================================================ DATA FEED (no GitHub token)
+// publishData() builds the JSON consumed by the Angular web app (standings from the sheet +
+// match results from the API) and writes it as a single string into cell A1 of a technical
+// "Feed" sheet. That sheet is then "Published to the web" as CSV; the web app reads that URL.
+// No token needed: Google serves the published cell, with unlimited reads.
+var FEED_SHEET = 'Feed';
+
+// Group-stage matches from the API, mapped to Italian names. Cached to spare API calls.
+function getMatchesData() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('matchesData');
+  if (cached) return JSON.parse(cached);
+  var url = 'https://api.football-data.org/v4/competitions/' + COMPETITION + '/matches';
+  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true, headers: { 'X-Auth-Token': API_TOKEN } });
+  if (response.getResponseCode() !== 200) return [];
+  var data = JSON.parse(response.getContentText());
+  var out = (data.matches || [])
+    .filter(function (m) { return m.stage === 'GROUP_STAGE'; })
+    .map(function (m) {
+      var home = (m.homeTeam && m.homeTeam.name) || '';
+      var away = (m.awayTeam && m.awayTeam.name) || '';
+      var ft = (m.score && m.score.fullTime) || {};
+      var entry = {
+        group: String(m.group || '').replace('GROUP_', ''),
+        home: TEAM_NAMES[home] || FOLDED_NAMES[fold(home)] || home,
+        away: TEAM_NAMES[away] || FOLDED_NAMES[fold(away)] || away,
+        status: m.status,
+        utc: m.utcDate
+      };
+      if (ft.home != null) entry.hs = ft.home;
+      if (ft.away != null) entry.as = ft.away;
+      return entry;
+    });
+  cache.put('matchesData', JSON.stringify(out), 60); // 1 minute (match the trigger cadence)
+  return out;
+}
+
+// Assembles the payload (same shape as the example client/public/data.json).
+function buildPayload() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var config = ss.getSheetByName('Config');
+  var sheet = ss.getSheetByName(SHEET_NAME);
+  var rowCount = LAST_ROW - FIRST_ROW + 1;
+  var names = sheet.getRange(FIRST_ROW, 2, rowCount, 1).getValues();              // column B
+  var stats = sheet.getRange(FIRST_ROW, FIRST_STAT_COL, rowCount, 5).getValues(); // C..G
+  var posCol = sheet.getRange(FIRST_ROW, POS_COL, rowCount, 1).getValues();       // T (official position)
+
+  var standings = {};
+  for (var i = 0; i < rowCount; i++) {
+    var name = names[i][0];
+    if (!name) continue;
+    var s = stats[i];
+    standings[name] = {
+      w: s[0] || 0, d: s[1] || 0, l: s[2] || 0, gf: s[3] || 0, ga: s[4] || 0, pos: posCol[i][0] || 0
+    };
+  }
+
+  var sim = config && String(config.getRange('B1').getValue()).toUpperCase() === 'ON';
+  var status = config ? String(config.getRange('B3').getValue()) : '';
+  return {
+    updated: new Date().toISOString(),
+    status: status,
+    source: 'football-data.org',
+    sim: sim,
+    standings: standings,
+    matches: sim ? [] : getMatchesData()   // during SIM don't hit the matches API
+  };
+}
+
+// Writes the payload JSON into Feed!A1 (creates the sheet if missing).
+function publishData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var feed = ss.getSheetByName(FEED_SHEET);
+  if (!feed) feed = ss.insertSheet(FEED_SHEET);
+  feed.getRange('A1').setValue(JSON.stringify(buildPayload()));
 }
 
 function onOpen() {
@@ -320,7 +402,8 @@ function onOpen() {
     .createMenu('⚽ Scommesse')
     .addItem('Ricolora Gironi', 'colorGironi')
     .addItem('Aggiorna dati ora', 'updateStandings')
-    .addItem('Installa aggiornamento automatico (15 min)', 'installAutoUpdate')
+    .addItem('Pubblica dati (Feed) ora', 'publishData')
+    .addItem('Installa aggiornamento automatico (1 min)', 'installAutoUpdate')
     .addItem('Rimuovi aggiornamento automatico', 'removeAutoUpdate')
     .addSeparator()
     .addItem('🔧 DEBUG: simula gironi CONCLUSI', 'debugSimulateFinished')
@@ -332,8 +415,8 @@ function onOpen() {
 
 function installAutoUpdate() {
   removeAutoUpdate();
-  ScriptApp.newTrigger('updateStandings').timeBased().everyMinutes(15).create();
-  SpreadsheetApp.getUi().alert('Aggiornamento automatico attivo: ogni 15 minuti (solo durante le partite).');
+  ScriptApp.newTrigger('updateStandings').timeBased().everyMinutes(1).create();
+  SpreadsheetApp.getUi().alert('Aggiornamento automatico attivo: ogni minuto (chiamate reali solo durante le partite).');
 }
 
 function removeAutoUpdate() {

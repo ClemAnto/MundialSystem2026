@@ -15,36 +15,39 @@ condivisibili via link a chiunque:
 - **Gironi**: le 12 classifiche live con evidenziazione favorevole/sfavorevole alle scommesse;
 - **Risultati**: le partite della fase a gironi.
 
+> App pubblica: **MundialSystem2026** → https://clemanto.github.io/MundialSystem2026/
+> (repo `ClemAnto/MundialSystem2026`). Il nome cartella locale resta `BollettaMondiale2026`.
+
 ---
 
 ## 2. Architettura (2 parti)
 
-### Parte A — il "motore dati" (Google Sheet + Apps Script)
-Sfrutta le chiamate gratuite a **football-data.org** per raccogliere classifiche + risultati e
-**pubblicarli come `data.json`** su GitHub. È l'unico componente che consuma chiamate API.
+### Parte A — il "motore dati" (Google Sheet + Apps Script), SENZA token
+Sfrutta le chiamate gratuite a **football-data.org** per raccogliere classifiche + risultati, costruisce
+il JSON e lo scrive **in una cella** (`A1`) di un foglio tecnico `Feed`. Quel foglio è **"Pubblicato sul
+web" come CSV**: Google lo serve a chiunque, con letture illimitate. È l'unico componente che consuma API.
 
 ```
-football-data.org  ──(Apps Script, trigger 15 min, solo finestre-partita)──►  data.json
-        │  commit su GitHub (branch main, via REST API contents)
-        ▼
-   raw.githubusercontent.com   (CDN, CORS *, cache 5 min)
+football-data.org ──(Apps Script, trigger 1 min, chiamate reali solo nelle finestre-partita)──►
+   foglio "Feed" cella A1 = JSON  ──"Pubblica sul web (CSV)"──►
+      docs.google.com/.../pub?...output=csv   (CORS *, servito da Google, letture illimitate)
 ```
 
 ### Parte B — la webapp (Angular, su GitHub Pages)
-Sito **statico** che legge `data.json` dal CDN (letture illimitate, nessuna chiamata API per i lettori)
-e calcola **client-side** tutta la logica scommesse. I dati statici (bollette/quote/gironi) sono
-compilati nell'app.
+Sito **statico** che scarica il CSV del Feed (una cella = il JSON), fa l'**unescape** del CSV e calcola
+**client-side** tutta la logica scommesse. I dati statici (bollette/quote/gironi) sono compilati nell'app.
 
 ```
-   App Angular 21 (GitHub Pages, deploy via GitHub Actions)
-        │  fetch data.json  +  dati statici bollette (TS generato dal Python)
+   App Angular 21 (GitHub Pages)  ──fetch CSV Feed + unescape──►  LiveData
+        │  + dati statici bollette (TS generato dal Python)
         ▼
-   Tabellone + Gironi + Risultati
+   Tabellone + Gironi + Risultati   (+ modalità What-if, vedi §11)
 ```
 
-**Perché disaccoppiare dati e app**: `data.json` cambia ogni ~15 min, l'app quasi mai. Servendo i dati
-da `raw.githubusercontent.com` (con `paths-ignore` sul workflow) i commit del JSON **non** ricostruiscono
-il sito. Decoupling = niente rebuild inutili, freschezza ~5 min (cache CDN), tutto gratis.
+**Perché "senza token" via Foglio pubblicato**: l'Apps Script possiede già il foglio (ci scrive senza
+credenziali esterne) e Google serve il CSV pubblicato con `Access-Control-Allow-Origin: *` e letture
+illimitate → niente PAT GitHub, niente commit di dati. Il deploy dell'**app** su Pages è una cosa
+separata (GitHub Actions, vedi §8): l'app cambia di rado, i dati ogni ~15 min, e restano disaccoppiati.
 
 ---
 
@@ -57,7 +60,7 @@ il sito. Decoupling = niente rebuild inutili, freschezza ~5 min (cache CDN), tut
 | CSS utility | Tailwind CSS v4 | **4.3** | via `@tailwindcss/postcss`, config in CSS |
 | Hosting app | GitHub Pages | — | deploy via GitHub Actions |
 | Fonte dati | football-data.org | API v4 | piano free, competizione `WC` |
-| CDN dati | raw.githubusercontent.com | — | `access-control-allow-origin: *`, `cache-control: max-age=300` |
+| Sorgente live (no token) | Google Sheet "Pubblica sul web" (CSV) | — | servito da Google, `access-control-allow-origin: *` (verificato 2026-06-10) |
 | Runtime locale | Node / npm | v24.15.0 / 11.10.1 | |
 
 > ⚠️ **Angular 22** è uscito il 2026-06-03, ma ng-zorro non lo supporta ancora → restare su **Angular 21**.
@@ -80,9 +83,10 @@ il sito. Decoupling = niente rebuild inutili, freschezza ~5 min (cache CDN), tut
 | `client/` | **App Angular 21** (webapp di consultazione). Comandi npm si lanciano qui. |
 | `src/genera_scommesse.py` | Generatore del file Excel (foglio Google legacy). |
 | `src/genera_dati_web.py` | Esporta i dati statici bollette/gironi verso l'app Angular (single source of truth). |
-| `src/Codice.gs` | Apps Script: scarica i dati e pubblica `data.json` su GitHub. |
+| `src/Codice.gs` | Apps Script: scarica i dati e pubblica il JSON nel foglio `Feed` (poi pubblicato come CSV). |
 | `dist/Mondiali2026_Scommesse.xlsx` | Output del generatore Excel. |
-| `data.json` | Dati dinamici (classifiche + risultati) scritti dall'Apps Script. Letti dall'app via CDN. |
+| `client/public/data.json` | Esempio statico di dati (per dev/UI). In produzione l'app legge il CSV del Feed. |
+| `client/src/app/core/` | Motore (`bet-engine`), caricatore dati (`data-loader`), tipi (`model`), sigle (`team-abbr`), what-if (`what-if`), dati statici generati (`bets-data`). |
 | `.github/workflows/` | Workflow di build & deploy su GitHub Pages. |
 | `ref/` | Immagini di riferimento delle bollette giocate (scontrini). |
 | `legacy/` | Vecchia web-app statica accantonata + vecchio generatore web. Ignorabile. |
@@ -153,8 +157,10 @@ K: Portogallo, Colombia, Rd Congo, *Uzbekistan* · L: Inghilterra, Croazia, Ghan
 Funzioni principali (vedi commenti nel file):
 - `updateStandings()` — scarica le classifiche e le scrive nel foglio. Solo se SIM=OFF e dentro una
   finestra-partita `[inizio .. +155 min]`; cache anti-raffica (max 1 chiamata reale / 30s). Poi `publishData()`.
-- `publishData()` — costruisce `data.json` (classifiche dal foglio + risultati dall'API) e lo **committa su
-  GitHub** via REST API. Token GitHub in **Script Properties** (`GITHUB_TOKEN`), MAI nel codice.
+- `publishData()` — costruisce il JSON (classifiche dal foglio + risultati da `/matches`) e lo scrive in
+  `Feed!A1` (crea il foglio `Feed` se manca). Il foglio `Feed` va "Pubblicato sul web" come CSV; l'app legge
+  quell'URL. **Nessun token.** Durante SIM non chiama l'API dei risultati (matches = []). Agganciato a
+  `updateStandings` (successo/attesa/SIM), alle simulazioni debug e a `onEdit`, così il Feed resta sincronizzato.
 - `colorGironi()` / `onEdit()` — colorazione del foglio Gironi (legacy, vedi §9 trappole).
 - DEBUG: `debugSimulateFinished()`, `debugSimulateMidStage()`, `debugSimulateWinning()`, `resetToLive()`.
 - `installAutoUpdate()` / `removeAutoUpdate()` — trigger ogni 15 min.
@@ -163,14 +169,21 @@ I lettori in sola lettura **non** consumano chiamate API (leggono `data.json` da
 
 ---
 
-## 8. Deploy / setup (per l'utente)
+## 8. Deploy / hosting (FATTO per l'app, in corso per i dati)
 
-> Da completare quando l'app è pronta (vedi `ROADMAP.md`). In sintesi:
-1. Repo GitHub **pubblico** (Pages + Actions gratis e illimitati).
-2. GitHub Pages: deploy via GitHub Actions (build dell'app Angular in `client/`).
-3. Apps Script: incollare `src/Codice.gs`, impostare `GITHUB_TOKEN` (PAT con permesso `contents:write`)
-   nelle Script Properties, eseguire `updateStandings` una volta (autorizzare), poi installare il trigger.
-4. Condividere il link di GitHub Pages: pubblico, nessun login.
+- **Repo**: https://github.com/ClemAnto/MundialSystem2026 (pubblico). Utente GitHub: `ClemAnto`.
+- **Sito live**: https://clemanto.github.io/MundialSystem2026/
+- **Deploy app**: GitHub Actions ([.github/workflows/deploy.yml]) builda `client/` e pubblica su Pages.
+  Usa il **token integrato** di Actions (`pages: write` + `id-token: write`) → **nessun PAT**. `base-href`
+  impostato a `/<repo>/`; fallback SPA `404.html`. `paths-ignore: data.json` → i dati non ribuildano il sito.
+  Pages abilitato in modalità "GitHub Actions" (`gh api -X POST .../pages -f build_type=workflow`).
+- `gh` CLI è autenticato sul PC dell'utente come `ClemAnto` (scope `repo`, `workflow`): permette create/push/deploy
+  senza inserire credenziali. **Non** utilizzabile da Apps Script (gira su server Google).
+- **Dati live (senza token)**: l'app legge il **Feed** = foglio `Feed` pubblicato come CSV
+  (`docs.google.com/spreadsheets/d/e/.../pub?gid=1925420550&single=true&output=csv`). L'URL è in
+  `client/src/app/core/data-loader.ts` (`DATA_URL`); CORS verificato. Per il dev locale si può rimettere
+  `DATA_URL = 'data.json'`. ⚠️ Il **sito live va ripubblicato** (push → Actions) per usare il Feed:
+  il deploy attuale potrebbe ancora puntare all'esempio finché non si fa un nuovo push.
 
 ---
 
@@ -213,6 +226,44 @@ I lettori in sola lettura **non** consumano chiamate API (leggono `data.json` da
   vengono ignorate (titolo scuro, margine residuo → disallineato). Fix: scrivere una **classe non-layered**
   in `styles.css` (es. `.app-title`) che vince per specificità sui selettori-tag di ng-zorro. Verificato
   2026-06-10 con screenshot headless (`chrome --headless --screenshot`).
+- **Drag&drop con tabelle HTML**: i `<tr>` trascinati col CDK perdono l'impaginazione (il drag preview
+  vive fuori dalla `<table>`) → le card dei Gruppi usano righe `<div>` con CSS grid invece della tabella.
 - **Verifica visiva**: per controllare il rendering reale uso screenshot headless di Chrome
   (`chrome --headless=new --force-device-scale-factor=2 --window-size=W,H --screenshot=out.png URL`) e leggo
-  il PNG. Più affidabile che dedurre il layout dal CSS.
+  il PNG. Più affidabile che dedurre il layout dal CSS. (Se lancio più istanze headless in parallelo può
+  servire un `--user-data-dir` dedicato per evitare lock.)
+- **Feed CSV (no token)**: "Pubblica sul web → CSV" mette il JSON in una cella → la risposta è il JSON con
+  le virgolette **raddoppiate** e racchiuso tra `"`. L'app fa l'unescape (`parseFeed` in `data-loader.ts`:
+  togli BOM, togli i `"` esterni, `""`→`"`, poi `JSON.parse`). L'URL 307-redirige a googleusercontent; la
+  risposta finale ha `access-control-allow-origin: *` → fetch cross-origin OK da browser normale.
+
+---
+
+## 11. Modalità "What-if" (client-side, in memoria)
+
+Tasto **What-if** nell'header: attiva una simulazione locale che **non tocca i dati reali** e si azzera
+uscendo. Implementata in `client/src/app/core/what-if.ts` (signal `editMode`, `overrides`, `groupOrders`)
+e applicata dal motore: `BetEngine.computeAll(data, overrides, groupOrders)`.
+- **Bollette**: click su una riga → forza/toglie il ✔ di quella selezione (chiave `n|girone|t1|t2`);
+  esiti e vincite si ricalcolano. Semantica: override `true` vince anche su squadre eliminate
+  (`dead=false`); override `false` = mancato passaggio reale. La vincita usa il `bothQual` calcolato.
+  Hover: anteprima del ✔ al 50% di opacità + velatura blu sulla riga.
+- **Gruppi**: drag&drop delle squadre (Angular CDK `cdkDropList`/`cdkDrag`) per riordinare la classifica
+  ipotetica; il motore forza `pos`, `qual = pos ≤ 2`, `elim = false`. Il gruppo modificato mostra ring
+  ambra + badge **WHAT-IF** (`GironeView.custom`); info banner "trascina le squadre…" quando attivo.
+- Sidebar "SINTESI BOLLETTE" (componente riusabile `features/sintesi-bollette`, usato in Gruppi e
+  Incontri; la pagina host legge `hoveredGroup` via `viewChild` per evidenziare la card del gruppo):
+  vincente/perdente per bolletta (con importo `vincita`
+  se vincente) + footer "Totale vincite" (somma delle sole bollette in vincita); n. "gruppi ko"; click
+  su una riga perdente → espande l'elenco delle selezioni perdenti per girone (altezza animata col trick
+  `grid-template-rows: 0fr → 1fr`, lettera del gruppo in un cerchio blu); hover su una selezione perdente
+  → evidenzia la card del gruppo correlato (ring blu; ring ambra = gruppo con classifica custom).
+- Tastino **reset** (icona reload) nell'header, visibile solo con modifiche attive: azzera tutto.
+- **Incontri**: stepper −/+ per impostare il risultato di ogni partita (`matchScores`: chiave
+  `home|away`). Il motore "rigioca" i punteggi custom sopra le classifiche reali
+  (`applyMatchScores`): sottrae il risultato reale solo se già conteggiato (status `FINISHED`) e
+  ignora la posizione ufficiale API nei gruppi toccati (diventa stantia → rango calcolato). Righe
+  custom evidenziate in ambra + badge WHAT-IF.
+- Precedenze: classifiche custom (drag) > punteggi custom (incontri) > dati reali; il click sulla
+  selezione (✔) vince comunque sul `bothQual` derivato da tutto il resto.
+- Dipendenza aggiunta: **`@angular/cdk`** (drag-drop), ora diretta in `package.json`.

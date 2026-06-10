@@ -1,0 +1,49 @@
+@if (loader.model(); as m) {
+  <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:sticky lg:top-4">
+    <div class="bg-[#1f4e78] px-3 py-2 text-sm font-bold text-white">SINTESI BOLLETTE</div>
+    <ul class="divide-y divide-slate-100 text-xs">
+      @for (b of m.bollette; track b.n) {
+        <li [title]="b.stato">
+          <div class="flex items-center gap-2 px-3 py-1.5 transition-colors duration-200"
+               [class.cursor-pointer]="wrongGroups(b) > 0"
+               [class.hover:bg-slate-50]="wrongGroups(b) > 0"
+               (click)="toggleExpand(b)">
+            <span class="w-3 text-right font-bold text-slate-600">{{ b.n }}</span>
+            @if (b.code > 0) {
+              <span class="font-bold text-green-700">✔ Vincente</span>
+              <span class="ml-auto font-semibold tabular-nums text-green-700">{{ euro(b.vincita) }}</span>
+            } @else {
+              <span class="font-bold text-red-700">✖ Perdente</span>
+              <span class="ml-auto rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-500">
+                {{ wrongGroups(b) }} {{ wrongGroups(b) === 1 ? 'gruppo ko' : 'gruppi ko' }}
+              </span>
+              <span class="text-slate-400 transition-transform duration-200"
+                    [class.rotate-90]="isExpanded(b.n)">▸</span>
+            }
+          </div>
+          <!-- losing selections, grouped by group letter; height animated via 0fr -> 1fr -->
+          <div class="expand-wrap" [class.expand-open]="isExpanded(b.n)">
+            <div class="overflow-hidden">
+              <div class="space-y-0.5 bg-slate-50 px-3 pb-2 pt-1">
+                @for (g of losingGroups(b); track g.grp) {
+                  <div class="-mx-1 flex cursor-pointer items-center gap-1.5 rounded px-1 transition-colors duration-150 hover:bg-slate-200/70"
+                       (mouseenter)="hoveredGroup.set(g.grp)"
+                       (mouseleave)="hoveredGroup.set(null)">
+                    <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#1f4e78] text-[9px] font-bold text-white">{{ g.grp }}</span>
+                    <span class="text-slate-500">
+                      @for (s of g.sels; track $index) {{{ abbr(s.t1) }}/{{ abbr(s.t2) }}@if (!$last) {, }}
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+    <div class="flex items-center justify-between border-t-2 border-slate-300 bg-slate-50 px-3 py-2 text-xs font-bold">
+      <span class="text-slate-600">Totale vincite</span>
+      <span class="tabular-nums text-green-700">{{ euro(totalWon(m.bollette)) }}</span>
+    </div>
+  </div>
+}

@@ -1,0 +1,25 @@
+/* -/+ goal stepper. Plain CSS (not Tailwind utilities) so it also wins over
+   ng-zorro's unlayered bare-<button> rules (see MEMO #10). */
+.stepper {
+  display: flex;
+  height: 1.1rem;
+  width: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 150ms;
+}
+.stepper:hover {
+  background-color: #cbd5e1;
+}
+
+/* On <button> Tailwind's ml-auto loses against ng-zorro's unlayered tag rules (MEMO #10). */
+.standings-toggle {
+  margin-left: auto;
+}

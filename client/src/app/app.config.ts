@@ -9,6 +9,8 @@ import {
   TableOutline,
   OrderedListOutline,
   ReloadOutline,
+  EditOutline,
+  ClockCircleOutline,
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -16,7 +18,7 @@ import { routes } from './app.routes';
 registerLocaleData(it);
 
 // ng-zorro icons are tree-shakable: every icon used in a template must be registered here.
-const icons = [TrophyOutline, TableOutline, OrderedListOutline, ReloadOutline];
+const icons = [TrophyOutline, TableOutline, OrderedListOutline, ReloadOutline, EditOutline, ClockCircleOutline];
 
 export const appConfig: ApplicationConfig = {
   providers: [

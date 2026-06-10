@@ -1,0 +1,9 @@
+/* What-if button: ng-zorro styles bare <button> tags with unlayered rules that beat
+   Tailwind text utilities (see MEMO §10), so the font color is set here instead. */
+.whatif-btn {
+  color: #fff;
+}
+.whatif-btn.whatif-on {
+  /* same color as the SIMULAZIONE badge (text-amber-900) */
+  color: var(--color-amber-900);
+}

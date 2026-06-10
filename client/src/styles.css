@@ -13,3 +13,31 @@
   letter-spacing: -0.01em;
   color: #fff;
 }
+
+/* ---- shared expand/collapse helpers (used across feature pages) ---- */
+
+/* Soft appear for conditional panels (info banners, etc.). */
+.expand-panel {
+  animation: expand-in 200ms ease-out;
+}
+@keyframes expand-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Collapsible block: grid-template-rows 0fr -> 1fr animates height to "auto" both ways.
+   Usage: <div class="expand-wrap [expand-open]"><div class="overflow-hidden">...</div></div> */
+.expand-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 250ms ease,
+    opacity 250ms ease;
+}
+.expand-wrap.expand-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { GROUPS, BOLLETTE } from './bets-data';
+import { matchKey, MatchScore, selKey } from './what-if';
 import {
   BollettaState,
   Computed,
@@ -7,6 +8,7 @@ import {
   GironeView,
   GroupState,
   LiveData,
+  MatchInfo,
   SelState,
   Standings,
   TeamState,
@@ -68,7 +70,49 @@ export class BetEngine {
   }
 
   // ---- dynamic computation ----
-  private computeTeams(standings: Standings): { teams: Record<string, TeamState>; closed: Record<string, boolean> } {
+
+  /**
+   * What-if: replay the custom match scores on top of the real standings.
+   * For matches whose real result is already counted (FINISHED) the real result is
+   * removed first; live/scheduled matches are assumed not to be in the standings yet.
+   * Returns the groups whose official API positions are now stale (recomputed by rank).
+   */
+  private applyMatchScores(
+    base: Standings,
+    matches: MatchInfo[],
+    matchScores: Record<string, MatchScore>,
+  ): { standings: Standings; stalePos: Set<string> } {
+    const stalePos = new Set<string>();
+    if (Object.keys(matchScores).length === 0) return { standings: base, stalePos };
+
+    const standings: Standings = {};
+    for (const t of Object.keys(this.teamGroup)) {
+      standings[t] = { ...(base[t] ?? { w: 0, d: 0, l: 0, gf: 0, ga: 0 }) };
+    }
+    const addResult = (home: string, away: string, hs: number, as: number, sign: number) => {
+      const h = standings[home];
+      const a = standings[away];
+      if (!h || !a) return;
+      h.w += sign * (hs > as ? 1 : 0); h.d += sign * (hs === as ? 1 : 0); h.l += sign * (hs < as ? 1 : 0);
+      h.gf += sign * hs; h.ga += sign * as;
+      a.w += sign * (as > hs ? 1 : 0); a.d += sign * (hs === as ? 1 : 0); a.l += sign * (as < hs ? 1 : 0);
+      a.gf += sign * as; a.ga += sign * hs;
+    };
+    for (const m of matches) {
+      const ov = matchScores[matchKey(m)];
+      if (!ov) continue;
+      if (m.status === 'FINISHED' && m.hs != null && m.as != null) addResult(m.home, m.away, m.hs, m.as, -1);
+      addResult(m.home, m.away, ov.hs, ov.as, 1);
+      const grp = this.teamGroup[m.home] ?? m.group;
+      if (grp) stalePos.add(grp);
+    }
+    return { standings, stalePos };
+  }
+
+  private computeTeams(
+    standings: Standings,
+    stalePos: Set<string>,
+  ): { teams: Record<string, TeamState>; closed: Record<string, boolean> } {
     const teams: Record<string, TeamState> = {};
     const score: Record<string, number> = {};
     for (const team of Object.keys(this.teamGroup)) {
@@ -83,10 +127,10 @@ export class BetEngine {
         pg, pts, dr, maxPts, pos: 0, qual: false, elim: false,
       };
     }
-    // position: official if > 0, else rank by score within the group (always distinct 1-4)
+    // position: official if > 0 (and still meaningful), else rank by score within the group
     for (const team of Object.keys(teams)) {
       const me = teams[team];
-      const posUff = standings[team]?.pos ?? 0;
+      const posUff = stalePos.has(me.group) ? 0 : standings[team]?.pos ?? 0;
       let rank = 1, elimCount = 0;
       for (const other of this.groupTeams[me.group]) {
         if (other === team) continue;
@@ -109,13 +153,18 @@ export class BetEngine {
     b: typeof BOLLETTE[number],
     teams: Record<string, TeamState>,
     closed: Record<string, boolean>,
+    overrides: Record<string, boolean>,
   ): BollettaState {
     const order: string[] = [];
     const byGroup: Record<string, SelState[]> = {};
     for (const s of b.sel) {
       if (!byGroup[s.grp]) { byGroup[s.grp] = []; order.push(s.grp); }
-      const bothQual = teams[s.t1].qual && teams[s.t2].qual;
-      const dead = teams[s.t1].elim || teams[s.t2].elim || (closed[s.grp] && !bothQual);
+      // what-if override: forced true wins over eliminations, forced false acts as a real miss
+      const ov = overrides[selKey(b.n, s.grp, s.t1, s.t2)];
+      const bothQual = ov ?? (teams[s.t1].qual && teams[s.t2].qual);
+      const dead = ov === true
+        ? false
+        : teams[s.t1].elim || teams[s.t2].elim || (closed[s.grp] && !bothQual);
       byGroup[s.grp].push({ grp: s.grp, t1: s.t1, t2: s.t2, q: s.q, bothQual, dead });
     }
 
@@ -143,13 +192,32 @@ export class BetEngine {
     const definitivo = code === 2 || code === -2;
     // current payout = stake x product of the quotes of the currently-winning selections
     let prod = 1;
-    for (const s of b.sel) if (teams[s.t1].qual && teams[s.t2].qual) prod *= s.q;
+    for (const g of groups) for (const s of g.sels) if (s.bothQual) prod *= s.q;
     const vincita = b.stake * prod;
 
     return { n: b.n, imp: b.imp, stake: b.stake, groups, tot, satNowCount, code, stato, definitivo, vincita };
   }
 
-  private computeGironi(teams: Record<string, TeamState>): GironeView[] {
+  /** What-if: force the ranking of the dragged groups to the user-chosen order. */
+  private applyGroupOrders(
+    teams: Record<string, TeamState>,
+    groupOrders: Record<string, string[]>,
+  ): void {
+    for (const letter of Object.keys(groupOrders)) {
+      groupOrders[letter].forEach((name, i) => {
+        const t = teams[name];
+        if (!t) return;
+        t.pos = i + 1;
+        t.qual = t.pos <= 2;
+        t.elim = false; // imagined ranking: real eliminations no longer apply
+      });
+    }
+  }
+
+  private computeGironi(
+    teams: Record<string, TeamState>,
+    groupOrders: Record<string, string[]>,
+  ): GironeView[] {
     return GROUPS.map((g) => {
       const rows: GironeRow[] = g.teams
         .map((t) => teams[t])
@@ -163,14 +231,25 @@ export class BetEngine {
           obbligo: this.obbligoCode(t.team),
           icon: this.obbligoIcon(t.team),
         }));
-      return { letter: g.letter, rows };
+      return { letter: g.letter, rows, custom: !!groupOrders[g.letter] };
     });
   }
 
-  computeAll(data: LiveData): Computed {
-    const { teams, closed } = this.computeTeams(data.standings ?? {});
-    const bollette = BOLLETTE.map((b) => this.computeBolletta(b, teams, closed));
-    const gironi = this.computeGironi(teams);
+  computeAll(
+    data: LiveData,
+    overrides: Record<string, boolean> = {},
+    groupOrders: Record<string, string[]> = {},
+    matchScores: Record<string, MatchScore> = {},
+  ): Computed {
+    const { standings, stalePos } = this.applyMatchScores(
+      data.standings ?? {},
+      data.matches ?? [],
+      matchScores,
+    );
+    const { teams, closed } = this.computeTeams(standings, stalePos);
+    this.applyGroupOrders(teams, groupOrders); // custom rankings always win over match scores
+    const bollette = BOLLETTE.map((b) => this.computeBolletta(b, teams, closed, overrides));
+    const gironi = this.computeGironi(teams, groupOrders);
     return { teams, closed, bollette, gironi };
   }
 }

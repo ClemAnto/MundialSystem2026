@@ -1,0 +1,8 @@
+/* What-if mode: lightly tint the whole hovered row. The tint lives on the cells
+   so it layers above the inline row background (group outcome color). */
+tr.row-editable > td {
+  transition: background-color 200ms;
+}
+tr.row-editable:hover > td {
+  background-color: rgba(31, 78, 120, 0.08);
+}

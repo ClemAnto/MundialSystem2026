@@ -45,6 +45,11 @@
 - Layout con utility **Tailwind**; componenti con **ng-zorro**. Tailwind importato PRIMA di ng-zorro.
 - Icone ng-zorro: registrarle una per una in `app.config.ts`.
 - Locale `it_IT`.
+- **Elementi interattivi: sempre `cursor-pointer`** (eccezione: `cursor-grab` per il drag&drop).
+  Ricorda che il preflight di Tailwind v4 NON mette `pointer` sui `<button>`.
+- **Override su tag stilizzati da ng-zorro** (`h1..h6`, `a`, `th`, ...): le utility Tailwind v4 vivono in un
+  layer a bassa priorità e perdono contro le regole per-tag (non-layered) di ng-zorro. Per vincere, usare
+  una **classe non-layered** in `styles.css` (es. `.app-title`) o, in subordine, l'important modifier. Vedi MEMO §10.
 
 ## Prima di consegnare una modifica
 
@@ -52,6 +57,8 @@
 2. Se tocchi i test: `npm test`.
 3. Aggiornare i `.md` pertinenti (decisioni → MEMO, avanzamento → ROADMAP).
 4. Verificare di non aver introdotto refusi (e segnalare quelli incontrati).
+5. Per modifiche all'aspetto: **verifica visiva** via screenshot headless di Chrome (vedi MEMO §10),
+   non dedurre il risultato dal solo CSS.
 
 ## Rituale «chiudo»
 

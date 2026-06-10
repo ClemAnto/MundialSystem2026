@@ -1,0 +1,16 @@
+/* CDK drag&drop: smooth reorder animations (classes applied by the CDK at runtime). */
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+.cdk-drag-preview {
+  border-radius: 0.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  /* solid fallback: never drag a see-through row (colored rows keep their inline bg) */
+  background-color: #fff;
+}

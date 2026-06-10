@@ -120,6 +120,8 @@ export interface GironeRow {
 export interface GironeView {
   letter: string;
   rows: GironeRow[];
+  /** True when the ranking comes from a what-if drag, not from real data. */
+  custom: boolean;
 }
 
 export interface Computed {
