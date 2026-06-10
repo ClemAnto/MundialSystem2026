@@ -333,7 +333,7 @@ Tutti gli stili vivono in `client/src/app/styles/`; **nessun colore hardcoded** 
 - `themes/mundial.scss` — primo tema custom, colori campionati dal logo (`assets/…_logo.png`
   via System.Drawing: navy `#14264a`, oro `#f0b00a`, verde `#417d13`). Scope
   `[data-theme='mundial']`: **override solo dei token che cambiano**, il resto eredita da `:root`.
-  Si attiva con `<html data-theme="mundial">` in `index.html`.
+  Si attiva con `<html data-theme="mundial">` in `index.html` — **è il tema attivo dalla v0.3.0**.
 - `styles.css` — entry Tailwind: `@theme { --color-*: initial }` **disattiva la palette di default**
   (un `bg-amber-50` residuo non genera nulla → si vede subito), poi `@theme inline` mappa i token
   sulle utility (`bg-primary`, `text-success`, `border-border`, `ring-info`, …). `inline` fa sì che

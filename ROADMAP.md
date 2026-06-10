@@ -10,8 +10,9 @@
   countdown header, branding (favicon + logo header), loader a pallone, dati dal Feed.
 - **Sessione 2026-06-10 (sera)**: introdotto il **sistema di temi** (token CSS in
   `client/src/app/styles/themes/`, mapping Tailwind `@theme inline`, ng-zorro su variable.css,
-  tema custom "mundial" dai colori del logo). Build verde, verifica visiva OK (default invariato,
-  mundial funzionante). **Non ancora committato/deployato.** Vedi MEMO §12.
+  tema custom "mundial" dai colori del logo). Build verde, verifica visiva OK. **v0.3.0 pubblicata
+  col tema mundial attivo.** `PROJECT-BLUEPRINT.md` aggiornato e spostato in `~\claude-config\`.
+  Vedi MEMO §12.
 - **Prossimo passo**: (1) sul Foglio installare il trigger 1 min (menu ⚽ Scommesse); (2) test
   end-to-end alla prima partita (**11/06 21:00**). Nota cache: dopo un deploy i browser possono
   mostrare la versione precedente per max 10 min (vedi MEMO §8).
