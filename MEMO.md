@@ -47,7 +47,7 @@ Sito **statico** che scarica il CSV del Feed (una cella = il JSON), fa l'**unesc
 **Perché "senza token" via Foglio pubblicato**: l'Apps Script possiede già il foglio (ci scrive senza
 credenziali esterne) e Google serve il CSV pubblicato con `Access-Control-Allow-Origin: *` e letture
 illimitate → niente PAT GitHub, niente commit di dati. Il deploy dell'**app** su Pages è una cosa
-separata (GitHub Actions, vedi §8): l'app cambia di rado, i dati ogni ~15 min, e restano disaccoppiati.
+separata (GitHub Actions, vedi §8): l'app cambia di rado, i dati ~ogni minuto durante le partite, e restano disaccoppiati.
 
 ---
 
@@ -86,7 +86,8 @@ separata (GitHub Actions, vedi §8): l'app cambia di rado, i dati ogni ~15 min, 
 | `src/Codice.gs` | Apps Script: scarica i dati e pubblica il JSON nel foglio `Feed` (poi pubblicato come CSV). |
 | `dist/Mondiali2026_Scommesse.xlsx` | Output del generatore Excel. |
 | `client/public/data.json` | Esempio statico di dati (per dev/UI). In produzione l'app legge il CSV del Feed. |
-| `client/src/app/core/` | Motore (`bet-engine`), caricatore dati (`data-loader`), tipi (`model`), sigle (`team-abbr`), what-if (`what-if`), dati statici generati (`bets-data`). |
+| `client/src/app/core/` | Motore (`bet-engine`), caricatore dati (`data-loader`), tipi (`model`), sigle (`team-abbr`), colori condivisi (`colors`), what-if (`what-if`), dati statici generati (`bets-data`). |
+| `client/src/app/features/sintesi-bollette/` | Componente riusabile "SINTESI BOLLETTE" (usato in Gruppi e Incontri). |
 | `.github/workflows/` | Workflow di build & deploy su GitHub Pages. |
 | `ref/` | Immagini di riferimento delle bollette giocate (scontrini). |
 | `legacy/` | Vecchia web-app statica accantonata + vecchio generatore web. Ignorabile. |
@@ -163,9 +164,9 @@ Funzioni principali (vedi commenti nel file):
   `updateStandings` (successo/attesa/SIM), alle simulazioni debug e a `onEdit`, così il Feed resta sincronizzato.
 - `colorGironi()` / `onEdit()` — colorazione del foglio Gironi (legacy, vedi §9 trappole).
 - DEBUG: `debugSimulateFinished()`, `debugSimulateMidStage()`, `debugSimulateWinning()`, `resetToLive()`.
-- `installAutoUpdate()` / `removeAutoUpdate()` — trigger ogni 15 min.
+- `installAutoUpdate()` / `removeAutoUpdate()` — trigger **ogni minuto** (vedi §10 per cadenza/quota).
 
-I lettori in sola lettura **non** consumano chiamate API (leggono `data.json` dalla CDN).
+I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = CSV pubblicato).
 
 ---
 
@@ -182,8 +183,14 @@ I lettori in sola lettura **non** consumano chiamate API (leggono `data.json` da
 - **Dati live (senza token)**: l'app legge il **Feed** = foglio `Feed` pubblicato come CSV
   (`docs.google.com/spreadsheets/d/e/.../pub?gid=1925420550&single=true&output=csv`). L'URL è in
   `client/src/app/core/data-loader.ts` (`DATA_URL`); CORS verificato. Per il dev locale si può rimettere
-  `DATA_URL = 'data.json'`. ⚠️ Il **sito live va ripubblicato** (push → Actions) per usare il Feed:
-  il deploy attuale potrebbe ancora puntare all'esempio finché non si fa un nuovo push.
+  `DATA_URL = 'data.json'`.
+- **Pubblicato il 2026-06-10** (commit `647d910`, run Actions verde, sito verificato con screenshot):
+  il sito live usa il Feed e tutte le feature (What-if, countdown, sintesi).
+- **Cache browser dopo un deploy** (verificato 2026-06-10): GitHub Pages serve TUTTO con
+  `Cache-Control: max-age=600` + ETag, **non configurabile**. I bundle JS/CSS hanno l'hash nel nome →
+  mai stantii; solo `index.html` può restare in cache fino a **10 minuti** dopo un deploy, poi si
+  riallinea da solo (revalidation ETag). Il Feed dati non è mai cacheato (fetch `no-store` + `?t=`).
+  Garanzia istantanea richiederebbe un service worker → scartato per semplicità (10 min accettabili).
 
 ---
 
@@ -202,11 +209,13 @@ I lettori in sola lettura **non** consumano chiamate API (leggono `data.json` da
 
 ## 10. Trappole risolte / decisioni tecniche (non rifare gli stessi errori)
 
-- **CORS dati**: `raw.githubusercontent.com` espone `access-control-allow-origin: *` e cache 5 min →
-  usabile direttamente dal browser senza proxy. Verificato 2026-06-10.
+- **Sorgente dati: scelto Foglio Google pubblicato (CSV), SENZA token.** Scartato `raw.githubusercontent.com`
+  (avrebbe richiesto un PAT GitHub in Apps Script per committare `data.json`). Il Foglio pubblicato è
+  scrivibile dall'Apps Script senza credenziali esterne e servito da Google. (Per cronaca: anche
+  `raw.githubusercontent.com` ha CORS `*` + cache 5 min, verificato 2026-06-10, ma non lo usiamo.)
 - **ng-zorro insegue Angular**: usare Angular 21 + ng-zorro 21 (non Angular 22, non ancora supportato).
-- **Token segreti**: il `GITHUB_TOKEN` per il commit di `data.json` sta nelle Script Properties di Apps
-  Script, mai nel sorgente. Il token football-data è a basso rischio (solo lettura, free) ma idem da non
+- **Niente token GitHub**: i dati NON si committano su GitHub → nessun `GITHUB_TOKEN` in Apps Script.
+  Resta solo il token football-data (in `Codice.gs`): basso rischio (sola lettura, free), ma da non
   diffondere oltre il necessario.
 - **Console Windows (cp1252)** non stampa emoji: nei `print` di test Python usare
   `print(... .encode('unicode_escape').decode())` per evitare `UnicodeEncodeError` (innocui).
@@ -226,6 +235,8 @@ I lettori in sola lettura **non** consumano chiamate API (leggono `data.json` da
   vengono ignorate (titolo scuro, margine residuo → disallineato). Fix: scrivere una **classe non-layered**
   in `styles.css` (es. `.app-title`) che vince per specificità sui selettori-tag di ng-zorro. Verificato
   2026-06-10 con screenshot headless (`chrome --headless --screenshot`).
+  Colpisce anche i **`<button>`**: `ml-auto` e `text-*` ignorati (successo 3 volte in questa sessione) →
+  classe nel CSS di componente (`.whatif-btn` in `app.css`, `.standings-toggle` in `risultati.css`).
 - **Drag&drop con tabelle HTML**: i `<tr>` trascinati col CDK perdono l'impaginazione (il drag preview
   vive fuori dalla `<table>`) → le card dei Gruppi usano righe `<div>` con CSS grid invece della tabella.
 - **Verifica visiva**: per controllare il rendering reale uso screenshot headless di Chrome
@@ -236,6 +247,19 @@ I lettori in sola lettura **non** consumano chiamate API (leggono `data.json` da
   le virgolette **raddoppiate** e racchiuso tra `"`. L'app fa l'unescape (`parseFeed` in `data-loader.ts`:
   togli BOM, togli i `"` esterni, `""`→`"`, poi `JSON.parse`). L'URL 307-redirige a googleusercontent; la
   risposta finale ha `access-control-allow-origin: *` → fetch cross-origin OK da browser normale.
+- **Template reference variables e blocchi `@if`/`@for`**: i ref (`#sintesi`) non attraversano gli
+  scope dei blocchi → da un blocco fratello non si vedono. Fix: `viewChild` signal query nel componente
+  (`sintesi = viewChild.required(SintesiBollette)` → `sintesi().hoveredGroup()` nel template).
+- **`ng serve` ascolta solo su IPv6**: per gli screenshot headless usare `http://localhost:PORT`
+  (con `127.0.0.1` → connection refused). E se si tocca `tsconfig.json` va **riavviato** (l'overlay
+  d'errore HMR resta stantio anche dopo il fix).
+- **Versione app nell'header**: letta da `package.json` via `import` (richiede `resolveJsonModule: true`
+  in `tsconfig.json`) → sempre sincronizzata, niente costanti duplicate.
+- **Cadenza aggiornamento = 1 minuto** (deciso 2026-06-10). I trigger Apps Script non scendono sotto 1 min
+  (valori ammessi 1/5/10/15/30); i 30 s richiederebbero un `sleep`-hack che brucia la quota runtime durante
+  le partite (~90 min/giorno su Gmail free; ~6 h su Workspace, e `@quadronica.com` è verosimilmente Workspace).
+  1 min è il "floor" economico e basta per il calcio. Chiamate reali solo nelle finestre-partita; cache
+  risultati 60 s; anti-raffica classifiche 30 s.
 
 ---
 
@@ -243,7 +267,7 @@ I lettori in sola lettura **non** consumano chiamate API (leggono `data.json` da
 
 Tasto **What-if** nell'header: attiva una simulazione locale che **non tocca i dati reali** e si azzera
 uscendo. Implementata in `client/src/app/core/what-if.ts` (signal `editMode`, `overrides`, `groupOrders`)
-e applicata dal motore: `BetEngine.computeAll(data, overrides, groupOrders)`.
+e applicata dal motore `BetEngine.computeAll(...)` (override ✔, ordini-gruppo da drag, punteggi-partita).
 - **Bollette**: click su una riga → forza/toglie il ✔ di quella selezione (chiave `n|girone|t1|t2`);
   esiti e vincite si ricalcolano. Semantica: override `true` vince anche su squadre eliminate
   (`dead=false`); override `false` = mancato passaggio reale. La vincita usa il `bothQual` calcolato.

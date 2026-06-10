@@ -4,11 +4,12 @@
 
 ## Dove eravamo / Prossimo passo
 
-- **Stato (2026-06-10)**: app live su GitHub Pages (repo `ClemAnto/MundialSystem2026`). Dati live **senza
-  token** collegati: l'Apps Script `publishData()` scrive il JSON nel foglio `Feed`, pubblicato come CSV;
-  l'app lo legge (CORS verificato). Aggiunte feature **What-if** e rifiniture UI (9 colonne, sigle, zebra).
-- **Prossimo passo**: (1) push per far usare il Feed al sito live; (2) sul Foglio installare il trigger
-  1 min; (3) test end-to-end alla prima partita (11/06 21:00).
+- **Stato (2026-06-10 sera)**: **tutto pubblicato** (commit `647d910`, deploy Actions verde, sito
+  verificato con screenshot): What-if completo (✔, drag classifiche, punteggi incontri), sintesi
+  bollette riusabile, countdown header, mini-classifiche negli Incontri, dati dal Feed.
+- **Prossimo passo**: (1) sul Foglio installare il trigger 1 min (menu ⚽ Scommesse); (2) test
+  end-to-end alla prima partita (11/06 21:00). Nota cache: dopo un deploy i browser possono mostrare
+  la versione precedente per max 10 min (vedi MEMO §8).
 
 ---
 
@@ -54,6 +55,8 @@
       (card evidenziate + info banner); tastino reset nell'header. Vedi MEMO §11.
 - [x] Gruppi: colonna laterale "SINTESI BOLLETTE" (vincente/perdente, n. gironi ko, righe
       espandibili con le selezioni perdenti).
+- [x] **Incontri**: editing punteggi what-if con stepper −/+ (il motore "rigioca" le classifiche);
+      mini-classifica per gruppo collassabile; "SINTESI BOLLETTE" come componente riusabile.
 - [x] Tab rinominati: Bollette / Gruppi / Incontri.
 - [x] Titolo app: **MundialSystem2026** (header + `<title>`).
 - [x] Header: countdown alla prossima partita (gg hh:mm:ss) o risultato live in corso; "Prossima
@@ -72,7 +75,9 @@
 - [x] Repo pubblico `ClemAnto/MundialSystem2026`; link pubblico verificato (screenshot live OK).
 - [x] Pages abilitato (source: GitHub Actions); deploy automatico su push.
 - [x] App collegata alla sorgente dati live (Feed CSV) in `data-loader.ts`.
-- [ ] **Push per aggiornare il sito live** (il deploy attuale potrebbe puntare ancora all'esempio).
+- [x] Push per aggiornare il sito live (2026-06-10, commit `647d910`: il sito usa il Feed, verificato).
+- [x] Cache post-deploy: bundle con hash + Pages `max-age=600` → al massimo 10 min di versione vecchia,
+      poi riallineo automatico; niente service worker (vedi MEMO §8).
 - [ ] Test end-to-end: aggiornamento Feed → app aggiornata (prima partita 11/06).
 
 ## Fase 6 — Rifiniture (post-lancio)
