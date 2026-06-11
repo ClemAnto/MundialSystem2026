@@ -21,7 +21,7 @@ const TEAM_IT: Record<string, string> = {
   Spain: 'Spagna', Uruguay: 'Uruguay', 'Saudi Arabia': 'Arabia Saudita', 'Cape Verde': 'Capo Verde', 'Cabo Verde': 'Capo Verde',
   France: 'Francia', Senegal: 'Senegal', Norway: 'Norvegia', Iraq: 'Iraq',
   Argentina: 'Argentina', Austria: 'Austria', Algeria: 'Algeria', Jordan: 'Giordania',
-  Portugal: 'Portogallo', Colombia: 'Colombia', 'DR Congo': 'Rd Congo', Uzbekistan: 'Uzbekistan',
+  Portugal: 'Portogallo', Colombia: 'Colombia', 'DR Congo': 'Rd Congo', 'Congo DR': 'Rd Congo', Uzbekistan: 'Uzbekistan',
   England: 'Inghilterra', Croatia: 'Croazia', Ghana: 'Ghana', Panama: 'Panama',
 };
 
