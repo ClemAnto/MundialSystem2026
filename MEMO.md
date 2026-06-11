@@ -277,6 +277,17 @@ I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = 
   il PNG. Più affidabile che dedurre il layout dal CSS. (Se lancio più istanze headless in parallelo può
   servire un `--user-data-dir` dedicato per evitare lock. Se lo screenshot non viene scritto senza errori
   visibili, riprovare con un `--user-data-dir` NUOVO: capita un fallimento transitorio da profilo sporco.)
+- **Verifica MOBILE (trappola, 2026-06-11)**: `--window-size=360,…` su headless **NON** dà una vera viewport
+  mobile a 360px CSS (sembra renderizzare più largo → vedi 2 colonne di bollette dove dovrebbe essercene 1,
+  e l'header pare sforare). Per testare il mobile sul serio serve l'**emulazione device via CDP**
+  (`Emulation.setDeviceMetricsOverride {width,height,deviceScaleFactor,mobile:true}`). Niente puppeteer nel
+  progetto, ma **Node 24 ha `WebSocket`/`fetch` globali**: lancio Chrome con `--remote-debugging-port=9222`,
+  mi collego al `webSocketDebuggerUrl`, imposto le metrics e faccio `Page.captureScreenshot`. Così l'header
+  responsive (sotto) si è rivelato corretto, mentre `--window-size` mentiva.
+- **Header responsive (v0.5.2)**: l'header è `flex-wrap`; su mobile i controlli vanno a capo su una 2ª riga,
+  logo e titolo rimpiccioliti (`.app-title` 1rem sotto i 640px, 1.125rem sopra), badge live `whitespace-nowrap`
+  (non si spezza), testo «What-if» e «Ultimo aggiornamento…» nascosti sotto `sm` (restano icona e versione),
+  `ml-auto` dello stato solo da `sm` in su.
 - **`ng serve` in background da PowerShell: MAI in pipe** (`| Select-Object -First N` & simili): quando
   la pipeline si chiude il processo serve viene terminato (il server "muore" silenziosamente dopo poco).
   Lanciarlo nudo in background e leggere l'output dal file del task.

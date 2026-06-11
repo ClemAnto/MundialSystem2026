@@ -1,13 +1,13 @@
 <div class="min-h-screen flex flex-col bg-background text-foreground">
   <header class="bg-primary text-primary-foreground shadow-sm">
-    <div class="flex w-full items-center gap-3 px-4 py-3">
-      <img src="logo-40.png" alt="Logo MundialSystem2026" width="40" height="40" class="h-10 w-10 rounded-lg" />
-      <h1 class="app-title">MundialSystem2026</h1>
+    <div class="flex w-full flex-wrap items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
+      <img src="logo-40.png" alt="Logo MundialSystem2026" width="40" height="40" class="h-8 w-8 shrink-0 rounded-lg sm:h-10 sm:w-10" />
+      <h1 class="app-title min-w-0 truncate">MundialSystem2026</h1>
       @if (loader.sim()) {
         <span class="rounded bg-accent px-2 py-0.5 text-xs font-bold leading-none text-accent-foreground">SIMULAZIONE</span>
       }
       @if (liveMatch(); as lm) {
-        <span class="flex items-center gap-1.5 rounded bg-success px-2 py-1.5 text-xs font-bold leading-none text-success-foreground"
+        <span class="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded bg-success px-2 py-1.5 text-xs font-bold leading-none text-success-foreground"
               [title]="lm.home + ' - ' + lm.away + ' (in corso)'">
           <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-success-foreground"></span>
           {{ abbr(lm.home) }}
@@ -22,7 +22,7 @@
           }
         </span>
       } @else if (nextMatch(); as nm) {
-        <span class="flex items-center gap-1.5 rounded bg-primary-foreground/10 px-2 py-1.5 text-xs leading-none tabular-nums"
+        <span class="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded bg-primary-foreground/10 px-2 py-1.5 text-xs leading-none tabular-nums"
               title="Tempo alla prossima partita">
           <span nz-icon nzType="clock-circle" class="flex leading-none"></span> {{ nm.left }}
         </span>
@@ -32,14 +32,14 @@
           · {{ nm.match.utc | date: 'dd/MM HH:mm' }}
         </span>
       }
-      <span class="whatif-wrap" [class.whatif-glow]="whatIf.editMode()">
+      <span class="whatif-wrap shrink-0" [class.whatif-glow]="whatIf.editMode()">
         <button type="button"
                 class="whatif-btn flex cursor-pointer items-center gap-1 rounded px-2.5 py-1 text-xs font-bold leading-none transition-colors"
                 [class.whatif-on]="whatIf.editMode()"
                 [class]="whatIf.editMode() ? 'bg-accent' : 'bg-primary-foreground/15 hover:bg-primary-foreground/25'"
                 (click)="whatIf.toggleEditMode()"
                 title="Modalità what-if: clicca sulle righe delle bollette per simulare gli esiti">
-          <span nz-icon nzType="edit" class="flex leading-none"></span> What-if
+          <span nz-icon nzType="edit" class="flex leading-none"></span> <span class="hidden sm:inline">What-if</span>
         </button>
       </span>
       @if (whatIf.editMode() && whatIf.hasChanges()) {
@@ -54,12 +54,12 @@
           <span nz-icon nzType="reload" class="flex leading-none"></span>
         </button>
       }
-      <span class="ml-auto text-right text-xs leading-tight opacity-80">
+      <span class="shrink-0 text-right text-xs leading-tight opacity-80 sm:ml-auto">
         @if (statusText(); as s) {
           <span [class.text-danger-muted]="loader.errored()">{{ s }}</span><br />
         }
         @if (loader.updated(); as u) {
-          Ultimo aggiornamento alle {{ u | date: 'HH:mm' }} ·
+          <span class="hidden sm:inline">Ultimo aggiornamento alle {{ u | date: 'HH:mm' }} ·</span>
         }
         v{{ version }}
       </span>

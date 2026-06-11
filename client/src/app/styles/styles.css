@@ -66,10 +66,15 @@ html body {
 .app-title {
   margin: 0;
   line-height: 1.1;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--primary-foreground);
+}
+@media (min-width: 640px) {
+  .app-title {
+    font-size: 1.125rem;
+  }
 }
 
 /* Loading indicator: a bouncing football with a bubble squash on impact.
