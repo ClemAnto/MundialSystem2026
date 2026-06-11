@@ -81,7 +81,7 @@
                           (click)="resetScore(m)">↺</button>
                 }
                 @if (isLive(m)) {
-                  <span class="flex items-center gap-1 rounded bg-success px-1.5 text-xs font-semibold text-success-foreground">
+                  <span class="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded bg-success px-1.5 text-xs font-semibold text-success-foreground">
                     <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-success-foreground"></span>{{ m.minute || 'LIVE' }}
                   </span>
                 }
