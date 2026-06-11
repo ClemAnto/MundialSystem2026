@@ -82,6 +82,26 @@ separata (GitHub Actions, vedi §8): l'app cambia di rado, i dati ~ogni minuto d
   Badge live in **verde** (`bg-success`/`text-success-foreground`, token `--success-foreground` aggiunto), col
   pallino pulsante; mostra il punteggio solo se `hs`/`as` sono presenti, altrimenti «vs».
 
+### ESPN — fonte LIVE del punteggio (v0.5.0, verificato 2026-06-11)
+- **Problema risolto**: football-data free non dà il live (sopra). Aggiunta una **seconda fonte** solo per il
+  risultato/minuto in corso, letta **direttamente dal frontend** (nessuna modifica all'Apps Script).
+- Endpoint (non documentato ma stabile e molto usato):
+  `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard`
+  - **Free, senza API key, senza carta.** `Access-Control-Allow-Origin: *` → fetch diretto dal browser
+    (niente proxy/CORS). `cache-control: max-age=1` → ~real-time.
+  - `?dates=YYYYMMDD` per una giornata; di default torna lo slate del giorno corrente (basta per il live).
+  - Mapping stato: `status.type.state` = `pre`→`TIMED`, `in`→`IN_PLAY`, `post`→`FINISHED`; `detail` = minuto
+    (es. `43'`). Punteggio in `competitions[0].competitors[].score` con `homeAway`.
+  - Nomi in inglese → mappa `TEAM_IT` in `core/live-scores.ts` (specchio di `TEAM_NAMES` in `Codice.gs`).
+- **Come è integrato** (`core/live-scores.ts` + `DataLoader`): `fetchLiveScores()` normalizza in `LiveScore`;
+  `applyLiveScores()` sovrappone `hs/as/status/minute` alle partite del feed **per coppia di squadre**
+  (ordine-indipendente). `data` è ora un `computed` (feed + overlay); **`model` resta su `raw` (feed)** →
+  l'overlay tocca solo il display, **mai le bollette**. Poll ESPN ogni **30 s** ma **solo in finestra-partita**
+  (kickoff−2min … kickoff+155min) e non in SIM; fuori finestra l'overlay si svuota.
+- ⚠️ **Rischi**: endpoint non ufficiale (può cambiare/sparire → football-data resta il fallback per
+  calendario/classifiche); uso personale non commerciale. Alternative scartate: API-Football (free ma con
+  key/account), TheSportsDB (livescore dietro Patreon).
+
 ---
 
 ## 4. Struttura del repository

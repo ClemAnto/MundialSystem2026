@@ -45,6 +45,8 @@ export interface MatchInfo {
   as?: number;
   status: string;
   utc?: string;
+  /** Live clock from the ESPN overlay (e.g. "22'", "Halftime"); set only while in play. */
+  minute?: string;
 }
 
 export interface LiveData {

@@ -2,6 +2,11 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { BetEngine } from './bet-engine';
 import { Computed, LiveData } from './model';
 import { WhatIf } from './what-if';
+import { applyLiveScores, fetchLiveScores, LiveScore } from './live-scores';
+import { MATCH_WINDOW_MS } from './live';
+
+const LIVE_POLL_MS = 30_000; // ESPN poll cadence while a match window is open
+const LIVE_PREROLL_MS = 120_000; // start polling 2 min before kick-off
 
 /**
  * Where the live data is fetched from: the Google Sheet "Feed" tab published as CSV.
@@ -24,8 +29,16 @@ export class DataLoader {
   private readonly engine = inject(BetEngine);
   private readonly whatIf = inject(WhatIf);
   private readonly raw = signal<LiveData | null>(null);
+  /** ESPN live overlay (in-play / finished scores for the current day). */
+  private readonly liveOverlay = signal<LiveScore[]>([]);
 
-  readonly data = this.raw.asReadonly();
+  /** Feed data with the ESPN live scores overlaid onto the matching matches. */
+  readonly data = computed<LiveData | null>(() => {
+    const d = this.raw();
+    const live = this.liveOverlay();
+    if (!d || !live.length) return d;
+    return { ...d, matches: applyLiveScores(d.matches, live) };
+  });
   readonly status = signal<string>('Caricamento…');
   readonly errored = signal(false);
 
@@ -35,6 +48,7 @@ export class DataLoader {
 
   constructor() {
     setInterval(() => this.nowTick.set(Date.now()), 1000);
+    setInterval(() => this.refreshLive(), LIVE_POLL_MS);
   }
 
   /** Live data run through the betting engine (null until first load). */
@@ -66,9 +80,33 @@ export class DataLoader {
       this.raw.set(data);
       this.errored.set(false);
       this.status.set(data.status ?? 'Aggiornato');
+      this.refreshLive();
     } catch (err) {
       this.errored.set(true);
       this.status.set('Errore nel caricamento dei dati');
+    }
+  }
+
+  /**
+   * Pull the ESPN overlay, but only while a match window is open (kick-off − 2 min ..
+   * kick-off + 155 min) and not in simulation mode — outside that it would be a wasted call.
+   */
+  private async refreshLive(): Promise<void> {
+    const d = this.raw();
+    const now = Date.now();
+    const windowOpen = !d?.sim && (d?.matches ?? []).some((m) => {
+      if (m.status === 'FINISHED') return false;
+      const k = new Date(m.utc ?? '').getTime();
+      return !isNaN(k) && now >= k - LIVE_PREROLL_MS && now <= k + MATCH_WINDOW_MS;
+    });
+    if (!windowOpen) {
+      if (this.liveOverlay().length) this.liveOverlay.set([]);
+      return;
+    }
+    try {
+      this.liveOverlay.set(await fetchLiveScores());
+    } catch {
+      // ESPN is best-effort: on failure keep the last overlay and retry next tick.
     }
   }
 }

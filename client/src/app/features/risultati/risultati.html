@@ -82,7 +82,7 @@
                 }
                 @if (isLive(m)) {
                   <span class="flex items-center gap-1 rounded bg-success px-1.5 text-xs font-semibold text-success-foreground">
-                    <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-success-foreground"></span>LIVE
+                    <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-success-foreground"></span>{{ m.minute || 'LIVE' }}
                   </span>
                 }
               </li>

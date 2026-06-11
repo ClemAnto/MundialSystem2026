@@ -21,10 +21,16 @@
   (euristica temporale, condivisa) con orologio reattivo in `DataLoader`; stato header semplificato in
   «Ultimo aggiornamento alle HH:mm»; nella pagina **Incontri** la partita live è evidenziata (riga verde
   + pillola «● LIVE»). Build verde, verifica visiva OK.
-- **Prossimo passo**: (1) **trovare una fonte dati live più tempestiva** (API free adeguata o scraping
-  da sito autorevole), perché football-data.org free non basta per il risultato in tempo reale;
-  (2) sul Foglio installare il trigger 1 min (menu ⚽ Scommesse). Nota cache: dopo un deploy i browser
-  possono mostrare la versione precedente per max 10 min (vedi MEMO §8).
+- **Sessione 2026-06-11 (tardi): fonte LIVE trovata → v0.5.0.** Integrata l'**API ESPN**
+  (`site.api.espn.com/.../fifa.world/scoreboard`, free, no key, CORS aperto, ~real-time) come seconda fonte
+  solo per punteggio+minuto live, letta **direttamente dal frontend** (nessun tocco all'Apps Script).
+  Header e Incontri ora mostrano risultato e minuto reali (es. «MES 1-0 SUD · 43'»). Overlay solo sul display,
+  bollette intatte. Build verde, verifica visiva OK col live reale. Vedi MEMO §3 (ESPN). **v0.5.0 committata
+  in locale; da pubblicare su richiesta.**
+- **Prossimo passo**: (1) **pubblicare v0.5.0** quando l'utente lo chiede; (2) completare/verificare la mappa
+  nomi ESPN→IT sui 48 nomi dei gironi quando il tabellone è definito; (3) sul Foglio installare il trigger
+  1 min (menu ⚽ Scommesse). Nota cache: dopo un deploy i browser possono mostrare la versione precedente per
+  max 10 min (vedi MEMO §8).
 - ⚠️ **Regola: niente push/deploy senza richiesta esplicita** (vedi CLAUDE.md).
 
 ---

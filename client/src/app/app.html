@@ -17,6 +17,9 @@
             <span class="opacity-90">vs</span>
           }
           {{ abbr(lm.away) }}
+          @if (lm.minute) {
+            <span class="opacity-90">· {{ lm.minute }}</span>
+          }
         </span>
       } @else if (nextMatch(); as nm) {
         <span class="flex items-center gap-1.5 rounded bg-primary-foreground/10 px-2 py-1.5 text-xs leading-none tabular-nums"
