@@ -270,6 +270,13 @@ I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = 
   2026-06-10 con screenshot headless (`chrome --headless --screenshot`).
   Colpisce anche i **`<button>`**: `ml-auto` e `text-*` ignorati (successo 3 volte in questa sessione) →
   classe nel CSS di componente (`.whatif-btn` in `app.css`, `.standings-toggle` in `risultati.css`).
+- **Posizioni ufficiali DEGENERI dal feed (regressione v0.5.x, 2026-06-11)**: a inizio torneo football-data
+  assegna `position: 1` a TUTTE le squadre a pari punti (0 partite) → nel feed 42/48 team con `pos=1`, 45 con
+  `pos≤2`. Il bet-engine faceva `qual = pos <= 2` fidandosi della pos ufficiale → quasi tutti "qualificati" →
+  ogni coppia soddisfatta → **tutte le bollette risultavano vincenti**. NON era un problema di nomi/abbreviazioni
+  (la logica usa i nomi completi di `bets-data`; un mismatch darebbe un crash, non "tutte vincenti"). Fix in
+  `bet-engine.computeTeams`: la pos ufficiale si usa **solo se il girone forma un vero 1-2-3-4 distinto**
+  (`officialValid`), altrimenti si calcola il rank per punti/diff.reti/gol (deterministico, come l'Excel).
 - **Drag&drop con tabelle HTML**: i `<tr>` trascinati col CDK perdono l'impaginazione (il drag preview
   vive fuori dalla `<table>`) → le card dei Gruppi usano righe `<div>` con CSS grid invece della tabella.
 - **Verifica visiva**: per controllare il rendering reale uso screenshot headless di Chrome

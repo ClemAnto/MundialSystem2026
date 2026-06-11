@@ -127,10 +127,22 @@ export class BetEngine {
         pg, pts, dr, maxPts, pos: 0, qual: false, elim: false,
       };
     }
-    // position: official if > 0 (and still meaningful), else rank by score within the group
+    // Official positions are trustworthy only when a group forms a full 1-2-3-4 ranking.
+    // football-data reports pos=1 for every team tied on 0 games early on, which would
+    // mark almost everyone as qualified (pos <= 2); in that case fall back to our rank.
+    const officialValid: Record<string, boolean> = {};
+    for (const letter of Object.keys(this.groupTeams)) {
+      const ps = this.groupTeams[letter]
+        .map((t) => standings[t]?.pos ?? 0)
+        .sort((a, b) => a - b);
+      officialValid[letter] = ps[0] === 1 && ps[1] === 2 && ps[2] === 3 && ps[3] === 4;
+    }
+
+    // position: official if it forms a valid ranking (and still meaningful), else rank by score
     for (const team of Object.keys(teams)) {
       const me = teams[team];
-      const posUff = stalePos.has(me.group) ? 0 : standings[team]?.pos ?? 0;
+      const posUff =
+        officialValid[me.group] && !stalePos.has(me.group) ? standings[team]?.pos ?? 0 : 0;
       let rank = 1, elimCount = 0;
       for (const other of this.groupTeams[me.group]) {
         if (other === team) continue;
