@@ -7,10 +7,16 @@
         <span class="rounded bg-accent px-2 py-0.5 text-xs font-bold leading-none text-accent-foreground">SIMULAZIONE</span>
       }
       @if (liveMatch(); as lm) {
-        <span class="flex items-center gap-1.5 rounded bg-danger px-2 py-1.5 text-xs font-bold leading-none text-danger-foreground"
+        <span class="flex items-center gap-1.5 rounded bg-success px-2 py-1.5 text-xs font-bold leading-none text-success-foreground"
               [title]="lm.home + ' - ' + lm.away + ' (in corso)'">
-          <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-danger-foreground"></span>
-          {{ abbr(lm.home) }} {{ lm.hs ?? 0 }}-{{ lm.as ?? 0 }} {{ abbr(lm.away) }}
+          <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-success-foreground"></span>
+          {{ abbr(lm.home) }}
+          @if (lm.hs != null && lm.as != null) {
+            {{ lm.hs }}-{{ lm.as }}
+          } @else {
+            <span class="opacity-90">vs</span>
+          }
+          {{ abbr(lm.away) }}
         </span>
       } @else if (nextMatch(); as nm) {
         <span class="flex items-center gap-1.5 rounded bg-primary-foreground/10 px-2 py-1.5 text-xs leading-none tabular-nums"
@@ -50,7 +56,7 @@
           <span [class.text-danger-muted]="loader.errored()">{{ s }}</span><br />
         }
         @if (loader.updated(); as u) {
-          Aggiornato: {{ u | date: 'dd/MM HH:mm' }} ·
+          Ultimo aggiornamento alle {{ u | date: 'HH:mm' }} ·
         }
         v{{ version }}
       </span>

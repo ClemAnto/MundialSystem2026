@@ -29,6 +29,14 @@ export class DataLoader {
   readonly status = signal<string>('Caricamento…');
   readonly errored = signal(false);
 
+  /** Shared 1-second clock driving the header countdown and live-match detection. */
+  private readonly nowTick = signal(Date.now());
+  readonly now = this.nowTick.asReadonly();
+
+  constructor() {
+    setInterval(() => this.nowTick.set(Date.now()), 1000);
+  }
+
   /** Live data run through the betting engine (null until first load). */
   readonly model = computed<Computed | null>(() => {
     const d = this.raw();

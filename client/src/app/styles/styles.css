@@ -23,6 +23,7 @@
   --color-accent-line: var(--accent-line);
 
   --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
   --color-danger-strong: var(--danger-strong);

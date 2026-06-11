@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
@@ -8,6 +8,7 @@ import { DataLoader } from './core/data-loader';
 import { WhatIf } from './core/what-if';
 import { abbr } from './core/team-abbr';
 import { MatchInfo } from './core/model';
+import { isLiveMatch } from './core/live';
 import packageJson from '../../package.json';
 
 const REFRESH_MS = 60_000; // re-read data.json every minute (static read, no API limits)
@@ -28,25 +29,32 @@ export class App {
   protected readonly abbr = abbr;
   protected readonly version = packageJson.version;
 
-  /** Ticks every second to drive the header countdown. */
-  private readonly now = signal(Date.now());
-
-  /** Feed status, minus the "waiting for next match" line (redundant with the countdown). */
+  /**
+   * Feed status, minus the routine "Aggiornato - ..." / "In attesa - ..." lines: those are
+   * redundant with the "ultimo aggiornamento alle HH:mm" line, so only meaningful states
+   * (errors, simulation, debug) are shown.
+   */
   protected readonly statusText = computed(() => {
     const s = this.loader.status();
-    return s.toLowerCase().startsWith('in attesa') ? '' : s;
+    const low = s.toLowerCase();
+    return low.startsWith('in attesa') || low.startsWith('aggiornato') ? '' : s;
   });
 
-  /** First match currently being played, if any. */
+  /**
+   * First match currently being played, if any. An explicit live status wins;
+   * otherwise a non-finished match inside its kick-off window counts as in progress
+   * (the free football-data.org feed often stays on 'TIMED' during play).
+   */
   protected readonly liveMatch = computed<MatchInfo | null>(() => {
     const matches = this.loader.data()?.matches ?? [];
-    return matches.find((m) => m.status === 'IN_PLAY' || m.status === 'PAUSED') ?? null;
+    const now = this.loader.now();
+    return matches.find((m) => isLiveMatch(m, now)) ?? null;
   });
 
   /** Next kick-off: the match plus the time left as "Ng hh:mm:ss" (null when nothing upcoming). */
   protected readonly nextMatch = computed<{ match: MatchInfo; left: string } | null>(() => {
     const matches = this.loader.data()?.matches ?? [];
-    const now = this.now();
+    const now = this.loader.now();
     let match: MatchInfo | null = null;
     let kickoff = Infinity;
     for (const m of matches) {
@@ -70,6 +78,5 @@ export class App {
   constructor() {
     this.loader.load();
     setInterval(() => this.loader.load(), REFRESH_MS);
-    setInterval(() => this.now.set(Date.now()), 1000);
   }
 }

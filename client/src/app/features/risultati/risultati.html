@@ -50,7 +50,8 @@
           <ul class="divide-y divide-border-soft text-sm">
             @for (m of g.matches; track $index) {
               <li class="group relative flex items-center gap-2 px-3 py-2 transition-colors duration-200"
-                  [class.bg-accent-soft]="isCustom(m)">
+                  [class.bg-accent-soft]="isCustom(m)"
+                  [class.match-live]="isLive(m) && !isCustom(m)">
                 <span class="flex-1 truncate text-right" [title]="m.home">{{ m.home }}</span>
                 @if (whatIf.editMode()) {
                   <span class="score-stepper" [class.custom]="isCustom(m)">
@@ -79,8 +80,10 @@
                           title="Ripristina il risultato reale"
                           (click)="resetScore(m)">↺</button>
                 }
-                @if (m.status === 'IN_PLAY' || m.status === 'PAUSED') {
-                  <span class="rounded bg-danger-soft px-1.5 text-xs font-semibold text-danger-strong">LIVE</span>
+                @if (isLive(m)) {
+                  <span class="flex items-center gap-1 rounded bg-success px-1.5 text-xs font-semibold text-success-foreground">
+                    <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-success-foreground"></span>LIVE
+                  </span>
                 }
               </li>
             }

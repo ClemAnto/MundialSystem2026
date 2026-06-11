@@ -23,8 +23,9 @@
   --accent-line: #fcd34d; /* borders of accent-tinted boxes */
 
   /* Status */
-  --success: #15803d; /* winning checks and amounts */
-  --danger: #dc2626; /* live-match badge background */
+  --success: #15803d; /* winning checks and amounts; also live-match badge background */
+  --success-foreground: #ffffff; /* text on success */
+  --danger: #dc2626; /* negative/error red */
   --danger-foreground: #ffffff; /* text on danger */
   --danger-strong: #b91c1c; /* danger-colored text on light backgrounds */
   --danger-soft: #fee2e2; /* tinted background (LIVE pill) */

@@ -73,6 +73,14 @@ separata (GitHub Actions, vedi §8): l'app cambia di rado, i dati ~ogni minuto d
 - **Perché non SofaScore**: blocca le richieste server-side di Apps Script (HTTP 403). `IMPORTHTML` non
   funziona su siti JS (SofaScore/FlashScore/FIFA). I proxy pubblici provati erano giù/bloccati.
 - Stagione: WC2026 dall'**11 giugno** al 19 luglio 2026; 72 partite di fase a gironi.
+- **Free tier NON dà il live (verificato 2026-06-11)**: durante una partita in corso il piano free riporta
+  ancora `status: "TIMED"` e **nessun** `score.fullTime` (provato con Messico–Sudafrica iniziata alle 21:00:
+  feed alle 21:06 → quella partita ancora `TIMED`, senza punteggio). Stato `IN_PLAY`/`PAUSED` e risultato
+  arrivano solo a fine partita. Conseguenza per l'header (vedi MEMO §13): `liveMatch` non può fidarsi di
+  `status`, usa una **finestra temporale** (kickoff ≤ ora ≤ kickoff+155 min e non `FINISHED`); il punteggio
+  live resta non disponibile finché la fonte è football-data.org free → si mostra «MES vs SUD», non «MES 0-0 SUD».
+  Badge live in **verde** (`bg-success`/`text-success-foreground`, token `--success-foreground` aggiunto), col
+  pallino pulsante; mostra il punteggio solo se `hs`/`as` sono presenti, altrimenti «vs».
 
 ---
 

@@ -13,9 +13,18 @@
   tema custom "mundial" dai colori del logo). Build verde, verifica visiva OK. **v0.3.0 pubblicata
   col tema mundial attivo.** `PROJECT-BLUEPRINT.md` aggiornato e spostato in `~\claude-config\`.
   Vedi MEMO §12.
-- **Prossimo passo**: (1) sul Foglio installare il trigger 1 min (menu ⚽ Scommesse); (2) test
-  end-to-end alla prima partita (**11/06 21:00**). Nota cache: dopo un deploy i browser possono
-  mostrare la versione precedente per max 10 min (vedi MEMO §8).
+- **Sessione 2026-06-11 (sera, prima partita live)**: alla prima partita reale (Messico–Sudafrica,
+  11/06 21:00) scoperto che **football-data.org free NON dà aggiornamenti live** (la partita resta
+  `TIMED` senza punteggio, `lastUpdated` fermo a prima del kickoff — vedi MEMO §3). Lato app: **v0.4.0**
+  — l'header mostra la **partita live** (badge verde, punteggio se presente, altrimenti «vs») al posto
+  del countdown quando una partita è in finestra; rilevamento live spostato in `core/live.ts`
+  (euristica temporale, condivisa) con orologio reattivo in `DataLoader`; stato header semplificato in
+  «Ultimo aggiornamento alle HH:mm»; nella pagina **Incontri** la partita live è evidenziata (riga verde
+  + pillola «● LIVE»). Build verde, verifica visiva OK.
+- **Prossimo passo**: (1) **trovare una fonte dati live più tempestiva** (API free adeguata o scraping
+  da sito autorevole), perché football-data.org free non basta per il risultato in tempo reale;
+  (2) sul Foglio installare il trigger 1 min (menu ⚽ Scommesse). Nota cache: dopo un deploy i browser
+  possono mostrare la versione precedente per max 10 min (vedi MEMO §8).
 - ⚠️ **Regola: niente push/deploy senza richiesta esplicita** (vedi CLAUDE.md).
 
 ---

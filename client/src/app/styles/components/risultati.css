@@ -39,6 +39,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Live match row: subtle green tint + green left accent (the LIVE pill carries the pulse). */
+.match-live {
+  background-color: color-mix(in srgb, var(--success) 12%, transparent);
+  box-shadow: inset 3px 0 0 0 var(--success);
+}
+
 /* On <button> Tailwind's ml-auto loses against ng-zorro's unlayered tag rules (MEMO #10). */
 .standings-toggle {
   margin-left: auto;

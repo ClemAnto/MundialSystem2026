@@ -4,6 +4,7 @@ import { DataLoader } from '../../core/data-loader';
 import { GROUPS } from '../../core/bets-data';
 import { GironeView, MatchInfo } from '../../core/model';
 import { matchKey, WhatIf } from '../../core/what-if';
+import { isLiveMatch } from '../../core/live';
 import { obbligoRowBg } from '../../core/colors';
 import { SintesiBollette } from '../sintesi-bollette/sintesi-bollette';
 
@@ -38,6 +39,11 @@ export class Risultati {
 
   protected played(m: MatchInfo): boolean {
     return (m.status === 'FINISHED' || m.status === 'IN_PLAY' || m.status === 'PAUSED') && m.hs != null;
+  }
+
+  /** Whether a match is currently being played (time-window heuristic, shared with the header). */
+  protected isLive(m: MatchInfo): boolean {
+    return isLiveMatch(m, this.loader.now());
   }
 
   // ---- collapsible mini standings per group ----
