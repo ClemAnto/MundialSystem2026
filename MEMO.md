@@ -135,6 +135,16 @@ combinazioni = prodotto del numero di selezioni per girone.
 - Per girone passa **una sola** coppia (i primi 2) → al massimo una selezione corretta per girone.
 - **Vincita** (se vince) = puntata × prodotto delle quote delle selezioni corrette.
 - Verificato: combinazioni e vincita massima di tutte e 9 le bollette tornano al centesimo con gli scontrini.
+- **Formule (2026-06-12)**: `stake = imp/ncomb`; `vmax = stake × ∏(quota MAX per girone)`;
+  `vmin = stake × ∏(quota MIN per girone)`. Verificabili con uno script Node che rilegge `BOLLETTE` da
+  `bets-data.ts`. `vmax` torna su tutte e 9; **`vmin` corretti** per le bollette 5/8/9 (errori di scansione
+  OCR in `genera_scommesse.py`: 58,03→58,93 · 128,59→126,60 · 108,48→106,48; la b8 aveva un vmin perfino
+  *maggiore* del minimo teorico, quindi palesemente sbagliato). Tutte le bollette coprono **gli stessi 10
+  gironi C–L** (A e B non sono giocati).
+- **Le 9 bollette sono MUTUAMENTE ESCLUSIVE: se ne vince al massimo UNA** (verificato 2026-06-12 — nessuna
+  coppia di bollette è congiuntamente vincibile: per ogni coppia esiste un girone con liste di coppie
+  disgiunte, e un unico esito reale soddisfa al più una bolletta). **Conseguenza UI ferrea**: i totali di
+  gruppo (dashboard) si calcolano col **massimo tra le bollette, MAI con la somma**.
 
 **"Accoppiata Passaggio Turno — Non in Ordine"** = le 2 squadre ai **primi 2 posti** del girone (ordine
 irrilevante). Interpretazione adottata: **primi 2**; le migliori terze NON contano (vedi TODO §9).
@@ -167,7 +177,10 @@ K: Portogallo, Colombia, Rd Congo, *Uzbekistan* · L: Inghilterra, Croazia, Ghan
 
 ## 6. Regole di colore (palette tenue, identica al foglio)
 
-`verde D9F2E1` · `rosa FBD9E6` · `giallo FCF1B8` · `rosso F9D6D6`
+`verde D9F2E1` · `rosa FBD9E6` · `rosato/pesca FCE0D4` (era giallo FCF1B8) · `rosso F9D6D6`
+
+> 2026-06-12: `--outcome-open` (girone aperto senza vincenti) cambiato da giallo a **pesca/rosato
+> `#fce0d4`** (strong `#f8c9ba`) per non confondersi col **dorato** dei gruppi modificati in what-if.
 
 > Dal 2026-06-10 questi hex vivono SOLO in `client/src/app/styles/themes/default.scss` come token
 > `--outcome-*`; `core/colors.ts` espone `var(--outcome-…)` (vedi §12). Non reintrodurre hex nei componenti.
@@ -180,7 +193,7 @@ K: Portogallo, Colombia, Rd Congo, *Uzbekistan* · L: Inghilterra, Croazia, Ghan
 **Tabellone**:
 - ✔ solo sulla riga che vince davvero (coppia con entrambe nei primi 2).
 - Sfondo per girone: verde = definitivo con vincente; rosa = definitivo senza vincenti;
-  giallo = aperto senza vincenti; neutro = aperto con una già in vincita.
+  rosato/pesca = aperto senza vincenti; neutro = aperto con una già in vincita.
 - Footer: ✔/✖ + vincita attuale; sfondo verde/rosso solo se la bolletta è definitiva.
 
 ---
@@ -317,6 +330,11 @@ I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = 
   interpolazione HighQualityBicubic). Niente dipendenze esterne.
 - **Diagnostica IDE spesso stantia** dopo edit rapidi a coppie .ts/.html (falsi errori su viewChild,
   imports, elementi sconosciuti): la verità è `npm run build`. Idem l'overlay HMR di `ng serve`.
+- **ng-zorro tooltip = `NzTooltipModule`** (NON `NzToolTipModule`): l'errore di battitura compila come falso
+  diagnostic IDE ma fallisce la build con `TS2724`. Selettore direttiva `[nz-tooltip]`, input `nzTooltipTitle`.
+- **Il tool Bash NON è PowerShell**: passare un here-string PowerShell `@'…'@` a `git commit -m` nel tool
+  Bash mette una `@` letterale come prima riga del messaggio. Per messaggi multi-riga usare un **file**:
+  `git commit -F msg.txt` (oppure `--amend -F` per correggere). (Il tool PowerShell, se serve, usa `@'…'@`.)
 - **Una sola `transform` per elemento**: per comporre due animazioni transform (es. rimbalzo +
   squash del pallone-loader, `.ball-loader` in `styles.css`) servono **due elementi annidati**.
 - **Cadenza aggiornamento = 1 minuto** (deciso 2026-06-10). I trigger Apps Script non scendono sotto 1 min
@@ -332,10 +350,29 @@ I lettori in sola lettura **non** consumano chiamate API (leggono il **Feed** = 
 Tasto **What-if** nell'header: attiva una simulazione locale che **non tocca i dati reali** e si azzera
 uscendo. Implementata in `client/src/app/core/what-if.ts` (signal `editMode`, `overrides`, `groupOrders`)
 e applicata dal motore `BetEngine.computeAll(...)` (override ✔, ordini-gruppo da drag, punteggi-partita).
-- **Bollette**: click su una riga → forza/toglie il ✔ di quella selezione (chiave `n|girone|t1|t2`);
-  esiti e vincite si ricalcolano. Semantica: override `true` vince anche su squadre eliminate
-  (`dead=false`); override `false` = mancato passaggio reale. La vincita usa il `bothQual` calcolato.
-  Hover: anteprima del ✔ al 50% di opacità + velatura blu sulla riga.
+- **Bollette**: click su una riga → forza/toglie il ✔ di quella selezione. Semantica: override `true` vince
+  anche su squadre eliminate (`dead=false`); override `false` = mancato passaggio reale. Hover: anteprima
+  del ✔ al 50% di opacità + velatura blu sulla riga.
+- **(2026-06-12) Override GROUP-WIDE**: la chiave di `selKey` è ora `girone|t1|t2` (NON più `n|girone|t1|t2`):
+  scegliere una coppia è un fatto del *girone*, quindi la scelta si propaga **a tutte le bollette**.
+  - Attivare una coppia spegne le altre coppie del girone **su tutte le bollette** (`deactivateOthers` scorre
+    `loader.model().bollette`): per girone passa una sola coppia.
+  - L'override è tenuto **solo se differisce dalla realtà** (`SelState.realQual`): ri-cliccando una coppia
+    per riportarla all'esito reale, l'override viene **cancellato** (niente override ridondanti, l'evidenza
+    sparisce). Helper `applyOutcome(s, value)` in `tabellone.ts`.
+  - `resetGroup` (↺) ripristina **l'intero girone su tutte le bollette** (i dati reali hanno già ≤1 coppia
+    attiva, quindi l'invariante regge). Il girone modificato è evidenziato con **barra dorata SOLO a sinistra**
+    + lieve velatura accent (`tr.group-customized`), non tutto il contorno.
+- **Box riepilogo dashboard** (in cima al Tabellone, vedi §5 per le formule e la mutua esclusività): 13
+  giocatori, quota 5 € a testa (≈65 € raccolti vs ~63,90 € giocati). 4 voci con **nz-tooltip** (cursor-help):
+  🤑 **Bottino potenziale** = `max(vincita)` tra le bollette (MAI somma); 👥 **Pro capite** (÷13);
+  🎉/🙁 **Netto a testa** (−5 €); 🌟 **Max a testa ancora possibile** = `max(vmaxLive)` (−5 €).
+  - `vincita` (potenziale per bolletta): gironi indovinati alla quota della coppia vincente, gironi ancora
+    aperti alla **quota più alta tra le coppie vive**, e **0** se un girone è ormai perso (`unsatCount>0`).
+  - `vmaxLive` (in `BollettaState`): miglior payout ancora ottenibile (max tra le coppie vive di ogni girone),
+    0 se la bolletta non è più vincibile; all'inizio del torneo `== vmax`, si restringe a mano a mano.
+  - Il footer della bolletta col massimo potenziale è evidenziato (sfondo accent); hover su "Bottino
+    potenziale" → anello accent sulla card collegata (signal `bottinoHover`).
 - **Gruppi**: drag&drop delle squadre (Angular CDK `cdkDropList`/`cdkDrag`) per riordinare la classifica
   ipotetica; il motore forza `pos`, `qual = pos ≤ 2`, `elim = false`. Il gruppo modificato mostra ring
   ambra + badge **WHAT-IF** (`GironeView.custom`); info banner "trascina le squadre…" quando attivo.

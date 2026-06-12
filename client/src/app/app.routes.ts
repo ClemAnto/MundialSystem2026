@@ -5,9 +5,9 @@ import { Gironi } from './features/gironi/gironi';
 import { Risultati } from './features/risultati/risultati';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'tabellone', pathMatch: 'full' },
-  { path: 'tabellone', component: Tabellone, title: 'Tabellone' },
-  { path: 'gironi', component: Gironi, title: 'Gironi' },
-  { path: 'risultati', component: Risultati, title: 'Risultati' },
-  { path: '**', redirectTo: 'tabellone' },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: 'dashboard', component: Tabellone, title: 'Dashboard' },
+  { path: 'groups', component: Gironi, title: 'Gruppi' },
+  { path: 'matches', component: Risultati, title: 'Incontri' },
+  { path: '**', redirectTo: 'dashboard' },
 ];

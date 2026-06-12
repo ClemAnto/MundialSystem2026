@@ -78,7 +78,9 @@
 3. Aggiornare i `.md` pertinenti (decisioni → MEMO, avanzamento → ROADMAP).
 4. Verificare di non aver introdotto refusi (e segnalare quelli incontrati).
 5. Per modifiche all'aspetto: **verifica visiva** via screenshot headless di Chrome (vedi MEMO §10),
-   non dedurre il risultato dal solo CSS.
+   non dedurre il risultato dal solo CSS. ⚠️ **Ma se l'utente chiede di non usare il browser per i test**
+   (emerso 2026-06-12), fermarsi a `npm run build` + ragionamento e proporre che la verifica visiva la
+   faccia lui.
 
 ## Rituale «chiudo»
 

@@ -27,10 +27,18 @@
   Header e Incontri ora mostrano risultato e minuto reali (es. «MES 1-0 SUD · 43'»). Overlay solo sul display,
   bollette intatte. Build verde, verifica visiva OK col live reale. Vedi MEMO §3 (ESPN). **v0.5.0 committata
   in locale; da pubblicare su richiesta.**
-- **Prossimo passo**: (1) **pubblicare v0.5.0** quando l'utente lo chiede; (2) completare/verificare la mappa
-  nomi ESPN→IT sui 48 nomi dei gironi quando il tabellone è definito; (3) sul Foglio installare il trigger
-  1 min (menu ⚽ Scommesse). Nota cache: dopo un deploy i browser possono mostrare la versione precedente per
-  max 10 min (vedi MEMO §8).
+- **Sessione 2026-06-12: dashboard + calcoli realistici → v0.6.x pubblicate.** What-if **group-wide** (la
+  scelta di una coppia si propaga a tutte le bollette; mutua esclusione e ripristino per girone su tutte);
+  **box riepilogo** in cima al Tabellone (13 giocatori × 5 €): Bottino potenziale / Pro capite / Netto a testa
+  / Max a testa ancora possibile, con **nz-tooltip** esplicativi. Scoperta chiave: **le 9 bollette sono
+  mutuamente esclusive → se ne vince al massimo una**, quindi i totali usano il **max, non la somma** (vedi
+  MEMO §5). `vmax`/`vmin` formule verificate, `vmin` corretti per b5/b8/b9 (errori OCR). Gironi persi: colore
+  da giallo a **rosato** (non confondersi col dorato what-if). Tab rinominati e **rotte allineate**:
+  `/dashboard`, `/groups`, `/matches`. Verifica via `npm run build` (l'utente in questa sessione **non voleva
+  test col browser**). Pubblicate v0.6.0 (`ee2652a`) e v0.6.1 (`c946aa9`, deploy verde); v0.6.2 = rotte.
+- **Prossimo passo**: (1) completare/verificare la mappa nomi ESPN→IT sui 48 nomi dei gironi quando il
+  tabellone è definito; (2) sul Foglio installare il trigger 1 min (menu ⚽ Scommesse). Nota cache: dopo un
+  deploy i browser possono mostrare la versione precedente per max 10 min (vedi MEMO §8).
 - ⚠️ **Regola: niente push/deploy senza richiesta esplicita** (vedi CLAUDE.md).
 
 ---
@@ -99,6 +107,11 @@
       (colori + font/radius/shadow), mapping su utility Tailwind via `@theme inline` (palette di
       default disattivata), ng-zorro agganciato al tema (variable.css + `NzConfigService`); primo
       tema custom `mundial` dal logo, attivabile con `data-theme` su `<html>`. Vedi MEMO §12.
+- [x] **Dashboard (ex Bollette)**: box riepilogo montepremi (Bottino potenziale / pro capite / netto /
+      max ancora possibile a testa, nz-tooltip); what-if group-wide (scelta propagata a tutte le bollette,
+      mutua esclusione, ripristino per girone, evidenza barra dorata sx); footer "Vincita Pot." + "Max";
+      evidenza della bolletta col potenziale massimo (+ hover-link dal box); 9 bollette su una riga a ≥1600px.
+- [x] Tab + **rotte** rinominati: Dashboard `/dashboard`, Gruppi `/groups`, Incontri `/matches`.
 - [ ] Rifiniture UI dopo feedback visivo (spaziature, mobile, dettagli).
 
 ## Fase 5 — Deploy
