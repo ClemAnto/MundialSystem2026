@@ -172,12 +172,13 @@ export class BetEngine {
     for (const s of b.sel) {
       if (!byGroup[s.grp]) { byGroup[s.grp] = []; order.push(s.grp); }
       // what-if override: forced true wins over eliminations, forced false acts as a real miss
-      const ov = overrides[selKey(b.n, s.grp, s.t1, s.t2)];
-      const bothQual = ov ?? (teams[s.t1].qual && teams[s.t2].qual);
+      const ov = overrides[selKey(s.grp, s.t1, s.t2)];
+      const realQual = teams[s.t1].qual && teams[s.t2].qual;
+      const bothQual = ov ?? realQual;
       const dead = ov === true
         ? false
         : teams[s.t1].elim || teams[s.t2].elim || (closed[s.grp] && !bothQual);
-      byGroup[s.grp].push({ grp: s.grp, t1: s.t1, t2: s.t2, q: s.q, bothQual, dead });
+      byGroup[s.grp].push({ grp: s.grp, t1: s.t1, t2: s.t2, q: s.q, bothQual, realQual, dead });
     }
 
     const groups: GroupState[] = order.map((grp) => {
@@ -202,12 +203,29 @@ export class BetEngine {
       code === -2 ? 'PERDENTE (def.)' :
       code === 1 ? 'Vincente (provv.)' : 'Perdente (provv.)';
     const definitivo = code === 2 || code === -2;
-    // current payout = stake x product of the quotes of the currently-winning selections
+    // Potential payout = stake x the quotes of the currently-winning pairs, taking at
+    // most ONE pair per group (you can never win two pairs of the same group). Groups
+    // you're currently losing contribute nothing (x1). Mirrors the slip's vmax, which
+    // is stake x the highest quote of each group.
     let prod = 1;
-    for (const g of groups) for (const s of g.sels) if (s.bothQual) prod *= s.q;
+    for (const g of groups) {
+      const winning = g.sels.filter((s) => s.bothQual);
+      if (winning.length) prod *= Math.max(...winning.map((s) => s.q));
+    }
     const vincita = b.stake * prod;
 
-    return { n: b.n, imp: b.imp, stake: b.stake, groups, tot, satNowCount, code, stato, definitivo, vincita };
+    // Still-achievable max payout: best quote among the pairs still alive in each
+    // group. 0 once any group is definitively unsatisfiable (the slip can't win).
+    let vmaxLive = 0;
+    if (unsatCount === 0) {
+      let best = 1;
+      for (const g of groups) {
+        best *= Math.max(...g.sels.filter((s) => !s.dead).map((s) => s.q));
+      }
+      vmaxLive = b.stake * best;
+    }
+
+    return { n: b.n, imp: b.imp, stake: b.stake, groups, tot, satNowCount, code, stato, definitivo, vincita, vmax: b.vmax, vmaxLive };
   }
 
   /** What-if: force the ranking of the dragged groups to the user-chosen order. */

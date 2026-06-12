@@ -81,7 +81,10 @@ export interface SelState {
   t1: string;
   t2: string;
   q: number;
+  /** Displayed outcome: what-if override if present, else the real one. */
   bothQual: boolean;
+  /** Real (non-overridden) outcome: lets the UI drop an override that matches reality. */
+  realQual: boolean;
   dead: boolean;
 }
 
@@ -106,7 +109,13 @@ export interface BollettaState {
   code: number;
   stato: string;
   definitivo: boolean;
+  /** Current potential payout (stake x quotes of the currently-winning pairs). */
   vincita: number;
+  /** Theoretical max payout (stake x the highest quote of each group). */
+  vmax: number;
+  /** Still-achievable max payout (best quote among the pairs still alive per group);
+   *  0 once the slip can no longer be won. Equals vmax before any group is decided. */
+  vmaxLive: number;
 }
 
 /** One row of a group card in the Gironi view. */

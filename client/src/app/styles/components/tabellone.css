@@ -1,8 +1,22 @@
 /* What-if mode: lightly tint the whole hovered row. The tint lives on the cells
    so it layers above the inline row background (group outcome color). */
 tr.row-editable > td {
-  transition: background-color 200ms;
+  transition: background-color 200ms, box-shadow 200ms;
 }
 tr.row-editable:hover > td {
   background-color: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+/* Customized group (any pair overridden): faint gold wash + a gold bar down the
+   left edge only, so the whole group reads as "being simulated". The wash sits on
+   the cells to layer above the inline outcome color; the bar uses box-shadow on the
+   first cell so it never shifts the layout. */
+tr.group-customized > td {
+  background-color: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+tr.group-customized:hover > td {
+  background-color: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+tr.group-customized > td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--accent);
 }

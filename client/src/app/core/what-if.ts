@@ -1,8 +1,12 @@
 import { computed, Injectable, signal } from '@angular/core';
 
-/** Key identifying one bet selection across all slips. */
-export function selKey(n: number, grp: string, t1: string, t2: string): string {
-  return `${n}|${grp}|${t1}|${t2}`;
+/**
+ * Key identifying one bet selection (a group + its pair). Deliberately omits the
+ * slip number: a what-if choice ("this pair qualifies in this group") is a fact
+ * about the group, so the same override applies to that pair in every slip.
+ */
+export function selKey(grp: string, t1: string, t2: string): string {
+  return `${grp}|${t1}|${t2}`;
 }
 
 /** Key identifying one group-stage match (each pair plays once). */
@@ -53,9 +57,14 @@ export class WhatIf {
     this.resetChanges();
   }
 
+  /** Force the displayed check of one selection to a specific value. */
+  setSel(key: string, value: boolean): void {
+    this.overrides.update((m) => ({ ...m, [key]: value }));
+  }
+
   /** Flip the displayed check of one selection. */
   toggleSel(key: string, current: boolean): void {
-    this.overrides.update((m) => ({ ...m, [key]: !current }));
+    this.setSel(key, !current);
   }
 
   /** Record the dragged ranking of one group. */

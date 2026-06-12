@@ -3,7 +3,7 @@ import { DataLoader } from '../../core/data-loader';
 import { abbr } from '../../core/team-abbr';
 import { selKey, WhatIf } from '../../core/what-if';
 import { euro } from '../../core/format';
-import { SelState } from '../../core/model';
+import { BollettaState, GroupState, SelState } from '../../core/model';
 import { OUTCOME, OUTCOME_DARKER } from '../../core/colors';
 
 @Component({
@@ -17,20 +17,97 @@ export class Tabellone {
   protected readonly whatIf = inject(WhatIf);
   protected readonly abbr = abbr;
 
-  /** Edit mode only: flip the check of the clicked selection and recompute. */
-  protected onRowClick(n: number, s: SelState): void {
+  /** Betting pool: 13 players, each chipped in a 5 € share. */
+  protected readonly players = 13;
+  protected readonly share = 5;
+
+  /** Sum of every slip's current potential payout (the "Vincita Pot." of each slip). */
+  protected totalPotential(bollette: BollettaState[]): number {
+    return bollette.reduce((sum, b) => sum + b.vincita, 0);
+  }
+
+  /** Total potential winnings split across the players. */
+  protected perPlayer(bollette: BollettaState[]): number {
+    return this.totalPotential(bollette) / this.players;
+  }
+
+  /** Net result per player: winnings share minus the 5 € they put in. */
+  protected netPerPlayer(bollette: BollettaState[]): number {
+    return this.perPlayer(bollette) - this.share;
+  }
+
+  /** Best still-achievable total (slips that can no longer be won contribute 0). */
+  protected maxTotal(bollette: BollettaState[]): number {
+    return bollette.reduce((sum, b) => sum + b.vmaxLive, 0);
+  }
+
+  /** The realizable-dream net per player: best achievable share minus the 5 € put in. */
+  protected maxNetPerPlayer(bollette: BollettaState[]): number {
+    return this.maxTotal(bollette) / this.players - this.share;
+  }
+
+  /**
+   * Edit mode only: flip the check of the clicked selection and recompute.
+   * Overrides are keyed by group+pair (not by slip), so the choice applies to that
+   * pair in every slip. Activating a pair also clears the other pairs of the group
+   * across all slips: only one pair can finish in a group's top 2.
+   */
+  protected onRowClick(s: SelState): void {
     if (!this.whatIf.editMode()) return;
-    this.whatIf.toggleSel(selKey(n, s.grp, s.t1, s.t2), s.bothQual);
+    const turningOn = !s.bothQual;
+    this.applyOutcome(s, turningOn);
+    if (turningOn) this.deactivateOthers(s);
   }
 
-  protected isOverridden(n: number, s: SelState): boolean {
-    return selKey(n, s.grp, s.t1, s.t2) in this.whatIf.activeOverrides();
+  protected isOverridden(s: SelState): boolean {
+    return selKey(s.grp, s.t1, s.t2) in this.whatIf.activeOverrides();
   }
 
-  /** Restore the real outcome of one selection (without toggling it). */
-  protected resetSel(event: MouseEvent, n: number, s: SelState): void {
+  /** True when any pair of the group carries a what-if override. */
+  protected groupCustomized(g: GroupState): boolean {
+    return g.sels.some((s) => this.isOverridden(s));
+  }
+
+  /**
+   * Restore the whole group to real data (drops every override of the group, across
+   * all slips): real standings already have at most one active pair, so the
+   * one-pair-per-group rule holds and the customized style clears everywhere.
+   */
+  protected resetGroup(event: MouseEvent, g: GroupState): void {
     event.stopPropagation();
-    this.whatIf.clearSel(selKey(n, s.grp, s.t1, s.t2));
+    for (const s of this.groupPairs(g.grp)) {
+      this.whatIf.clearSel(selKey(s.grp, s.t1, s.t2));
+    }
+  }
+
+  /** Force every pair of the group except the kept pair to inactive, across all slips. */
+  private deactivateOthers(kept: SelState): void {
+    for (const other of this.groupPairs(kept.grp)) {
+      if (other.t1 === kept.t1 && other.t2 === kept.t2) continue;
+      if (other.bothQual) this.applyOutcome(other, false);
+    }
+  }
+
+  /** Every pair appearing in a group across all slips (one selection can be picked per pair). */
+  private groupPairs(grp: string): SelState[] {
+    const out: SelState[] = [];
+    for (const b of this.loader.model()?.bollette ?? []) {
+      for (const g of b.groups) {
+        if (g.grp === grp) out.push(...g.sels);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Set a selection's outcome, but drop the override entirely when it matches the
+   * real outcome — so toggling a pair back to reality clears its customization
+   * (and the group's highlight) instead of leaving a redundant override behind.
+   */
+  private applyOutcome(s: SelState, value: boolean): void {
+    const key = selKey(s.grp, s.t1, s.t2);
+    if (value === s.realQual) this.whatIf.clearSel(key);
+    else this.whatIf.setSel(key, value);
   }
 
   protected readonly euro = euro;

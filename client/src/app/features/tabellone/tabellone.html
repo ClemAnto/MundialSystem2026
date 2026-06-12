@@ -1,19 +1,60 @@
 @if (loader.model(); as m) {
-  <!-- auto-fill keeps every card at least 12rem wide: bet rows stay fully visible at any viewport -->
-  <div class="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-3">
+  <!-- Pool summary: total winnings + per-player split (10 players, 5 € each). -->
+  @let net = netPerPlayer(m.bollette);
+  <div class="mb-4 flex flex-wrap items-center gap-x-8 gap-y-3 rounded-lg border border-accent-line bg-accent-soft px-4 py-3 shadow-sm">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl leading-none">🤑</span>
+      <div class="leading-tight">
+        <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Bottino totale</div>
+        <div class="text-xl font-bold tabular-nums text-accent-strong">{{ euro(totalPotential(m.bollette)) }}</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-2xl leading-none">👥</span>
+      <div class="leading-tight">
+        <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Pro capite · {{ players }} giocatori</div>
+        <div class="text-xl font-bold tabular-nums text-accent-strong">{{ euro(perPlayer(m.bollette)) }}</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-2xl leading-none">{{ net >= 0 ? '🎉' : '🙁' }}</span>
+      <div class="leading-tight">
+        <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Netto a testa · quota {{ euro(share) }}</div>
+        <div class="text-xl font-bold tabular-nums transition-colors duration-300"
+             [class.text-success]="net >= 0" [class.text-danger-strong]="net < 0">
+          {{ net > 0 ? '+' : '' }}{{ euro(net) }}
+        </div>
+      </div>
+    </div>
+    @let maxNet = maxNetPerPlayer(m.bollette);
+    <div class="flex items-center gap-2">
+      <span class="text-2xl leading-none">🌟</span>
+      <div class="leading-tight">
+        <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Max a testa ancora possibile · sogno</div>
+        <div class="text-xl font-bold tabular-nums transition-colors duration-300"
+             [class.text-success]="maxNet >= 0" [class.text-danger-strong]="maxNet < 0">
+          {{ maxNet > 0 ? '+' : '' }}{{ euro(maxNet) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- auto-fill keeps every card at least 12rem wide below 1600px; at >=1600px force a
+       single row of all 9 slips (9 equal columns). -->
+  <div class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-2 min-[1600px]:grid-cols-9">
     @for (b of m.bollette; track b.n) {
       <div class="flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-        <div class="bg-primary px-3 py-2 text-sm font-bold text-primary-foreground">
+        <div class="bg-primary px-2 py-1.5 text-xs font-bold text-primary-foreground">
           BOLLETTA {{ b.n }} <span class="font-normal opacity-80">({{ euro(b.imp) }})</span>
         </div>
 
-        <table class="w-full text-xs">
+        <table class="w-full text-[0.7rem]">
           <thead>
             <tr class="bg-primary text-primary-foreground">
-              <th class="px-2 py-1 text-left font-semibold">Gr</th>
-              <th class="px-2 py-1 text-left font-semibold">Coppia</th>
-              <th class="px-2 py-1 text-right font-semibold">Q</th>
-              <th class="px-2 py-1 text-center font-semibold">✔</th>
+              <th class="px-1.5 py-0.5 text-left font-semibold">Gr</th>
+              <th class="px-1.5 py-0.5 text-left font-semibold">Coppia</th>
+              <th class="px-1.5 py-0.5 text-right font-semibold">Q</th>
+              <th class="px-1.5 py-0.5 text-center font-semibold">✔</th>
             </tr>
           </thead>
           <tbody>
@@ -26,20 +67,21 @@
                     [class.border-border-strong]="$first || (lastGroup && $last)"
                     [class.cursor-pointer]="whatIf.editMode()"
                     [class.row-editable]="whatIf.editMode()"
-                    (click)="onRowClick(b.n, s)">
-                  <td class="px-2 py-1 font-semibold text-foreground-muted">{{ $first ? g.grp : '' }}</td>
-                  <td class="px-2 py-1 whitespace-nowrap" [title]="s.t1 + ' / ' + s.t2">
+                    [class.group-customized]="groupCustomized(g)"
+                    (click)="onRowClick(s)">
+                  <td class="px-1.5 py-0.5 font-semibold text-foreground-muted">{{ $first ? g.grp : '' }}</td>
+                  <td class="px-1.5 py-0.5 whitespace-nowrap" [title]="s.t1 + ' / ' + s.t2">
                     {{ abbr(s.t1) }} / {{ abbr(s.t2) }}
                   </td>
-                  <td class="px-2 py-1 text-right tabular-nums">{{ s.q.toFixed(2) }}</td>
-                  <td class="relative px-2 py-1 text-center font-bold text-success">
-                    @if (whatIf.editMode() && isOverridden(b.n, s)) {
+                  <td class="px-1.5 py-0.5 text-right tabular-nums">{{ s.q.toFixed(2) }}</td>
+                  <td class="relative px-1.5 py-0.5 text-center font-bold text-success">
+                    @if (whatIf.editMode() && isOverridden(s)) {
                       <!-- customized outcome: on row hover the check fades and the restore button overlays it -->
                       <span class="transition-opacity duration-150 group-hover:opacity-0">{{ s.bothQual ? '✔' : '' }}</span>
                       <button type="button"
                               class="reset-btn absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                              title="Ripristina l'esito reale"
-                              (click)="resetSel($event, b.n, s)">↺</button>
+                              title="Ripristina l'esito reale del girone"
+                              (click)="resetGroup($event, g)">↺</button>
                     } @else if (whatIf.editMode()) {
                       <!-- hover preview of the toggle: faint check appears (or the real one fades) -->
                       <span class="transition-opacity duration-200 group-hover:opacity-50"
@@ -54,9 +96,13 @@
           </tbody>
         </table>
 
-        <div class="mt-auto px-3 py-2 text-center text-sm font-bold text-primary"
-             [style.background]="footBg(b.code)" [title]="b.stato">
-          {{ b.code > 0 ? '✔' : '🙁' }} Vincita Pot. {{ euro(b.vincita) }}
+        <div class="mt-auto px-2 py-1.5 text-center" [style.background]="footBg(b.code)" [title]="b.stato">
+          <div class="text-xs font-bold text-primary">
+            {{ b.code > 0 ? '✔' : '🙁' }} Vincita Pot. {{ euro(b.vincita) }}
+          </div>
+          <div class="text-[0.65rem] font-normal text-foreground-muted" title="Vincita totale massima possibile">
+            Max {{ euro(b.vmax) }}
+          </div>
         </div>
       </div>
     }

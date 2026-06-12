@@ -44,7 +44,7 @@ bollette = {
         [("I", "Francia", "Senegal", 2.50), ("H", "Spagna", "Uruguay", 1.35),
          ("G", "Belgio", "Iran", 2.50), ("G", "Belgio", "Egitto", 1.85),
          ("L", "Inghilterra", "Croazia", 1.35)] + K2 + [("J", "Argentina", "Algeria", 2.25)]},
-    5: {"stake": 0.30, "ncomb": 54, "imp": 16.20, "vmin": 58.03, "vmax": 3822.63, "sel":
+    5: {"stake": 0.30, "ncomb": 54, "imp": 16.20, "vmin": 58.93, "vmax": 3822.63, "sel":
         [("C", "Brasile", "Marocco", 1.60), ("E", "Germania", "Ecuador", 1.65)] + F3 + D3 +
         [("I", "Francia", "Norvegia", 1.55), ("H", "Spagna", "Uruguay", 1.35)] + G3 +
         [("L", "Inghilterra", "Croazia", 1.35)] + K2 + [("J", "Argentina", "Algeria", 2.25)]},
@@ -56,11 +56,11 @@ bollette = {
         [("C", "Brasile", "Marocco", 1.60), ("E", "Germania", "Costa d'Avorio", 2.25)] + F3 + D3 +
         [("I", "Francia", "Norvegia", 1.55), ("H", "Spagna", "Arabia Saudita", 3.50)] + G3 +
         [("L", "Inghilterra", "Croazia", 1.35)] + K2 + [("J", "Argentina", "Austria", 1.60)]},
-    8: {"stake": 0.05, "ncomb": 54, "imp": 2.70, "vmin": 128.59, "vmax": 8211.86, "sel":
+    8: {"stake": 0.05, "ncomb": 54, "imp": 2.70, "vmin": 126.60, "vmax": 8211.86, "sel":
         [("C", "Brasile", "Scozia", 2.25), ("E", "Germania", "Costa d'Avorio", 2.25)] + F3 + D3 +
         [("I", "Francia", "Norvegia", 1.55), ("H", "Spagna", "Arabia Saudita", 3.50)] + G3 +
         [("L", "Inghilterra", "Ghana", 3.50)] + K2 + [("J", "Argentina", "Algeria", 2.25)]},
-    9: {"stake": 0.05, "ncomb": 54, "imp": 2.70, "vmin": 108.48, "vmax": 6906.99, "sel":
+    9: {"stake": 0.05, "ncomb": 54, "imp": 2.70, "vmin": 106.48, "vmax": 6906.99, "sel":
         [("C", "Brasile", "Marocco", 1.60), ("E", "Germania", "Ecuador", 1.65)] + F3 + D3 +
         [("I", "Francia", "Senegal", 2.50), ("H", "Spagna", "Arabia Saudita", 3.50)] + G3 +
         [("L", "Inghilterra", "Ghana", 3.50)] + K2 + [("J", "Argentina", "Algeria", 2.25)]},

@@ -50,11 +50,12 @@
      Used via inline [style.background] from core/colors.ts. */
   --outcome-pass: #d9f2e1; /* green: favourable / definitive winner */
   --outcome-fail: #fbd9e6; /* pink: unfavourable / definitive without winner */
-  --outcome-open: #fcf1b8; /* yellow: open without winners */
+  --outcome-open: #fce0d4; /* rosy peach: open without winners (kept off gold so it
+                              never reads like a what-if-customized group) */
   --outcome-lost: #f9d6d6; /* red: slip definitively lost */
   --outcome-pass-strong: #c7e6d3; /* darker variants to tell odd groups apart */
   --outcome-fail-strong: #f6c7da;
-  --outcome-open-strong: #f7e69c;
+  --outcome-open-strong: #f8c9ba;
   --outcome-neutral: #f4f6f9; /* open with one pair already winning */
 
   /* Typography */
