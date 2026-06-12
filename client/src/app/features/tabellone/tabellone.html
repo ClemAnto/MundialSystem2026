@@ -1,22 +1,27 @@
 @if (loader.model(); as m) {
-  <!-- Pool summary: total winnings + per-player split (10 players, 5 € each). -->
+  <!-- Pool summary: best winning slip + per-player split (13 players, 5 € each). -->
   @let net = netPerPlayer(m.bollette);
+  @let maxNet = maxNetPerPlayer(m.bollette);
   <div class="mb-4 flex flex-wrap items-center gap-x-8 gap-y-3 rounded-lg border border-accent-line bg-accent-soft px-4 py-3 shadow-sm">
-    <div class="flex items-center gap-2">
+    <div class="flex cursor-help items-center gap-2" nz-tooltip
+         (mouseenter)="bottinoHover.set(true)" (mouseleave)="bottinoHover.set(false)"
+         nzTooltipTitle="La vincita potenziale più alta tra le bollette (se ne può vincere una sola, quindi è il massimo, non una somma): il miglior caso ancora possibile della bolletta messa meglio.">
       <span class="text-2xl leading-none">🤑</span>
       <div class="leading-tight">
-        <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Bottino totale</div>
-        <div class="text-xl font-bold tabular-nums text-accent-strong">{{ euro(totalPotential(m.bollette)) }}</div>
+        <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Bottino potenziale</div>
+        <div class="text-xl font-bold tabular-nums text-accent-strong">{{ euro(potentialBottino(m.bollette)) }}</div>
       </div>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex cursor-help items-center gap-2" nz-tooltip
+         nzTooltipTitle="Il bottino potenziale diviso i {{ players }} partecipanti.">
       <span class="text-2xl leading-none">👥</span>
       <div class="leading-tight">
         <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Pro capite · {{ players }} giocatori</div>
         <div class="text-xl font-bold tabular-nums text-accent-strong">{{ euro(perPlayer(m.bollette)) }}</div>
       </div>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex cursor-help items-center gap-2" nz-tooltip
+         nzTooltipTitle="Guadagno (o perdita) netto per persona: la quota pro capite meno i {{ euro(share) }} versati da ciascuno.">
       <span class="text-2xl leading-none">{{ net >= 0 ? '🎉' : '🙁' }}</span>
       <div class="leading-tight">
         <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Netto a testa · quota {{ euro(share) }}</div>
@@ -26,8 +31,8 @@
         </div>
       </div>
     </div>
-    @let maxNet = maxNetPerPlayer(m.bollette);
-    <div class="flex items-center gap-2">
+    <div class="flex cursor-help items-center gap-2" nz-tooltip
+         nzTooltipTitle="Il massimo che ciascuno potrebbe ancora portare a casa: la miglior bolletta ancora in gioco (escluse le coppie e le bollette ormai impossibili da vincere), divisa per {{ players }} e meno i {{ euro(share) }} versati.">
       <span class="text-2xl leading-none">🌟</span>
       <div class="leading-tight">
         <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-accent-strong/80">Max a testa ancora possibile · sogno</div>
@@ -41,9 +46,13 @@
 
   <!-- auto-fill keeps every card at least 12rem wide below 1600px; at >=1600px force a
        single row of all 9 slips (9 equal columns). -->
+  @let topPotential = potentialBottino(m.bollette);
   <div class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-2 min-[1600px]:grid-cols-9">
     @for (b of m.bollette; track b.n) {
-      <div class="flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+      @let isTop = topPotential > 0 && b.vincita === topPotential;
+      <div class="flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm transition-shadow duration-200"
+           [class.ring-2]="isTop && bottinoHover()"
+           [class.ring-accent]="isTop && bottinoHover()">
         <div class="bg-primary px-2 py-1.5 text-xs font-bold text-primary-foreground">
           BOLLETTA {{ b.n }} <span class="font-normal opacity-80">({{ euro(b.imp) }})</span>
         </div>
@@ -96,8 +105,11 @@
           </tbody>
         </table>
 
-        <div class="mt-auto px-2 py-1.5 text-center" [style.background]="footBg(b.code)" [title]="b.stato">
-          <div class="text-xs font-bold text-primary">
+        <div class="mt-auto px-2 py-1.5 text-center" [class.bg-accent-soft]="isTop"
+             [style.background]="footBg(b.code)" [title]="b.stato">
+          <div class="cursor-help text-xs font-bold transition-colors duration-300" nz-tooltip
+               [class.text-primary]="!isTop" [class.text-accent-strong]="isTop"
+               nzTooltipTitle="Quanto pagherebbe questa bolletta nel miglior caso ancora possibile: i gironi già indovinati alla loro quota, quelli ancora aperti alla quota più alta ancora ottenibile. Scende a 0 se anche un solo girone è ormai perso (non più recuperabile).">
             {{ b.code > 0 ? '✔' : '🙁' }} Vincita Pot. {{ euro(b.vincita) }}
           </div>
           <div class="text-[0.65rem] font-normal text-foreground-muted" title="Vincita totale massima possibile">

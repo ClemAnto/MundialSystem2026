@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { DataLoader } from '../../core/data-loader';
 import { abbr } from '../../core/team-abbr';
 import { selKey, WhatIf } from '../../core/what-if';
@@ -8,7 +9,7 @@ import { OUTCOME, OUTCOME_DARKER } from '../../core/colors';
 
 @Component({
   selector: 'app-tabellone',
-  imports: [],
+  imports: [NzTooltipModule],
   templateUrl: './tabellone.html',
   styleUrl: '../../styles/components/tabellone.css',
 })
@@ -21,14 +22,21 @@ export class Tabellone {
   protected readonly players = 13;
   protected readonly share = 5;
 
-  /** Sum of every slip's current potential payout (the "Vincita Pot." of each slip). */
-  protected totalPotential(bollette: BollettaState[]): number {
-    return bollette.reduce((sum, b) => sum + b.vincita, 0);
+  /** True while the "Bottino potenziale" stat is hovered: highlights the linked slip(s). */
+  protected readonly bottinoHover = signal(false);
+
+  // The 9 slips are mutually exclusive (one real outcome can satisfy at most one
+  // slip), so the pool wins at most ONE slip — we take the best slip, never a sum.
+
+  /** Best potential payout among the slips (only one slip can ever win, so it's the
+   *  max, never a sum). vincita is already 0 for slips that can no longer be won. */
+  protected potentialBottino(bollette: BollettaState[]): number {
+    return bollette.reduce((max, b) => Math.max(max, b.vincita), 0);
   }
 
-  /** Total potential winnings split across the players. */
+  /** Potential bottino split across the players. */
   protected perPlayer(bollette: BollettaState[]): number {
-    return this.totalPotential(bollette) / this.players;
+    return this.potentialBottino(bollette) / this.players;
   }
 
   /** Net result per player: winnings share minus the 5 € they put in. */
@@ -36,14 +44,14 @@ export class Tabellone {
     return this.perPlayer(bollette) - this.share;
   }
 
-  /** Best still-achievable total (slips that can no longer be won contribute 0). */
-  protected maxTotal(bollette: BollettaState[]): number {
-    return bollette.reduce((sum, b) => sum + b.vmaxLive, 0);
+  /** Best payout still achievable among the slips still in play (only one can win). */
+  protected maxBottino(bollette: BollettaState[]): number {
+    return bollette.reduce((max, b) => Math.max(max, b.vmaxLive), 0);
   }
 
   /** The realizable-dream net per player: best achievable share minus the 5 € put in. */
   protected maxNetPerPlayer(bollette: BollettaState[]): number {
-    return this.maxTotal(bollette) / this.players - this.share;
+    return this.maxBottino(bollette) / this.players - this.share;
   }
 
   /**

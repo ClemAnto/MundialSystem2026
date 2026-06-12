@@ -109,7 +109,8 @@ export interface BollettaState {
   code: number;
   stato: string;
   definitivo: boolean;
-  /** Current potential payout (stake x quotes of the currently-winning pairs). */
+  /** Potential payout: guessed groups at their winning quote, still-open groups valued
+   *  at the highest quote still achievable; 0 once a group is definitively missed. */
   vincita: number;
   /** Theoretical max payout (stake x the highest quote of each group). */
   vmax: number;

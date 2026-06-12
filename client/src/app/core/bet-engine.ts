@@ -207,12 +207,20 @@ export class BetEngine {
     // most ONE pair per group (you can never win two pairs of the same group). Groups
     // you're currently losing contribute nothing (x1). Mirrors the slip's vmax, which
     // is stake x the highest quote of each group.
-    let prod = 1;
-    for (const g of groups) {
-      const winning = g.sels.filter((s) => s.bothQual);
-      if (winning.length) prod *= Math.max(...winning.map((s) => s.q));
+    // Potential payout, one quote per group: groups already guessed use the winning
+    // pair's quote; groups not yet guessed are valued optimistically at the highest
+    // quote still achievable (best among the pairs still alive). It collapses to 0 as
+    // soon as a group is definitively missed (the slip can no longer be won).
+    let vincita = 0;
+    if (unsatCount === 0) {
+      let prod = 1;
+      for (const g of groups) {
+        const winning = g.sels.filter((s) => s.bothQual);
+        const pool = winning.length ? winning : g.sels.filter((s) => !s.dead);
+        prod *= Math.max(...pool.map((s) => s.q));
+      }
+      vincita = b.stake * prod;
     }
-    const vincita = b.stake * prod;
 
     // Still-achievable max payout: best quote among the pairs still alive in each
     // group. 0 once any group is definitively unsatisfiable (the slip can't win).
